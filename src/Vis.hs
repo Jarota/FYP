@@ -6,7 +6,7 @@ import Control.Monad
 import Types
 import Graphs
 
-renderVis :: Vis x y -> IO ()
+renderVis :: Vis GLfloat GLfloat -> IO ()
 renderVis (Vis graph (c:cs)) = do
         clearColor $= (convertColour c)
         clear [ColorBuffer, DepthBuffer]

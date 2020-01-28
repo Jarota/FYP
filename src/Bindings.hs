@@ -1,4 +1,4 @@
-module Bindings (idle, display, reshape, keyboardMouse) where
+module Bindings (reshape, keyboardMouse) where
 
 import Graphics.UI.GLUT
 import Data.IORef

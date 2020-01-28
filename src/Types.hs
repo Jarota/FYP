@@ -1,6 +1,5 @@
 module Types (
     GraphData (..),
-    GraphType (..),
     AxisTitles,
     GraphTitle,
     Graph (..),
@@ -14,17 +13,12 @@ module Types (
 import Graphics.UI.GLUT
 
 data GraphData x y  = File String
-                    | Raw ([x], [y])
-
-data GraphType      = ScatterPlot2D
-                    | BarChart
-                    deriving (Eq)
-                    {- can add more types of graphs here whenever -}
+                    | Raw ([x], [y]) --- maybe should be Raw [(x, y)]
 
 type AxisTitles = (String, String)
 type GraphTitle = String
 
-data Graph x y = Graph GraphTitle GraphType [GraphData x y]
+data Graph x y = Scatter2D GraphTitle [GraphData x y]
 
 data Colour = Red | Green | Blue | White | Grey | Black
 

@@ -2,6 +2,8 @@ module Main where
 
 import Graphics.UI.GLUT
 import Data.IORef
+
+import Display
 import Bindings
 import Types
 
@@ -12,7 +14,7 @@ main = do
   _window <- createWindow "Hello World"
 
 
-  let visualisation = Vis (Graph "TEST" BarChart [(Raw ([1, 2, 3], [7, 8, 9]))]) ([Types.Blue, Types.Red] :: ColourScheme)
+  let visualisation = Vis (Scatter2D "TEST" [(Raw ([1, 2, 3], [7, 8, 9]))]) ([Types.Black, Types.Red] :: ColourScheme)
   vis <- newIORef visualisation
   zoom <- newIORef 1
 
