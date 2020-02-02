@@ -6,43 +6,53 @@ import Data.IORef
 import Types
 import Rendering
 
-renderGraph :: Graph GLfloat GLfloat -> [Colour] -> DisplayCallback
-renderGraph (Scatter2D title ds) cs = renderScatter2D (Scatter2D title ds) cs
+renderGraph :: Graph GLfloat GLfloat -> [Colour] -> ViewParams -> DisplayCallback
+renderGraph (Scatter2D title ds) cs vp = renderScatter2D (Scatter2D title ds) cs vp
 
-renderTitle :: String -> IO ()
-renderTitle _ = return () -- TODO
-
-renderScatter2D :: Graph GLfloat GLfloat -> [Colour] -> DisplayCallback
-renderScatter2D (Scatter2D title ds) colours    = do
+renderScatter2D :: Graph GLfloat GLfloat -> [Colour] -> ViewParams -> DisplayCallback
+renderScatter2D (Scatter2D title ds) (c:cs) viewParams = do
     renderTitle title
     axes2D
-    renderScatter2D' ds colours
-
-renderScatter2D' :: [GraphData GLfloat GLfloat] -> [Colour] -> IO ()
-renderScatter2D' [] _           = return ()
-renderScatter2D' (d:ds) (c:cs)  = do
     color $ convertColour c
-    renderScatter2DData d
-    -- square 0.3
-    renderScatter2D' ds cs
+    redoBackground
+    renderScatter2D' ds cs viewParams
 
-renderScatter2DData :: GraphData GLfloat GLfloat -> IO ()
-renderScatter2DData (File _)        = return () -- RenderTODO
-renderScatter2DData (Raw (xs, ys))  = renderSquares ps'
+renderScatter2D' :: [GraphData GLfloat GLfloat] -> [Colour] -> ViewParams -> IO ()
+renderScatter2D' [] _ _             = return ()
+renderScatter2D' (d:ds) (c:cs) vp   = do
+    renderScatter2DData d c vp
+    renderScatter2D' ds cs vp
+
+renderScatter2DData :: GraphData GLfloat GLfloat -> Colour -> ViewParams -> IO ()
+renderScatter2DData (File _) _ _        = return () -- TODO
+renderScatter2DData (Raw (xs, ys)) c vp = do
+    renderTicks ticksX ticksY
+    color $ convertColour c
+    renderSquares ps'
     where
-        maxX    = maximum xs
-        stepX   = 1.6 / maxX
-        xs'     = map (\x -> -0.8 + (x * stepX)) xs
-        maxY    = maximum ys
-        stepY   = 1.6 / maxY
-        ys'     = map (\y -> -0.8 + (y * stepY)) ys
-        zs      = take (length xs') (repeat (0::GLfloat))
+        z       = zoom vp
+        xs'     = fitData xs z
+        ys'     = fitData ys z
+        zs      = repeat (0::GLfloat)
         ps      = zip3 xs' ys' zs
         ps'     = concatMap (pointToSquare 0.02) ps
+        ticksX  = tickStepAndOffset xs'
+        ticksY  = tickStepAndOffset ys'
 
-axes2D :: IO ()
-axes2D = do
-    color $ convertColour Types.White
-    renderPrimitive Lines $ mapM_ vertex3f
-        [ (-0.8, 0.8, 0), (-0.8, -0.8, 0),
-        (-0.8, -0.8, 0), (0.8, -0.8, 0) ]
+fitData :: [GLfloat] -> GLfloat -> [GLfloat]
+fitData xs z = map (\x -> (-0.8 + (x * step)) * z) xs
+    where
+        range   = maximum xs
+        step    = 1.6 / range
+
+tickStepAndOffset :: [GLfloat] -> (GLfloat, GLfloat)
+tickStepAndOffset xs = (step, offset)
+    where
+        step    = minDifference xs
+        minX    = abs $ minimum xs
+        extra   = (abs $ minX - 0.8) / step
+        offset  = minX -- + (extra * (step + 1))
+
+
+minDifference :: (Num a, Ord a) => [a] -> a
+minDifference xs = minimum $ map abs $ zipWith (-) xs (drop 1 xs)

@@ -6,19 +6,16 @@ import Data.IORef
 
 import Types
 import Vis
-import Cube
 
-display :: IORef (Vis GLfloat GLfloat)-> IORef GLfloat -> DisplayCallback
-display visRef zoomRef = do
+display :: IORef (Vis GLfloat GLfloat)-> IORef ViewParams -> DisplayCallback
+display visRef vpRef = do
     vis <- get visRef
-    zoom <- get zoomRef
+    viewParams <- get vpRef
 
     loadIdentity
-    preservingMatrix $ do
-        scale zoom zoom (1::GLfloat)
-        renderVis vis
+    renderVis vis viewParams
     swapBuffers
 
-idle :: IORef GLfloat -> IdleCallback
-idle zoom = do
+idle :: IORef ViewParams -> IdleCallback
+idle viewParams = do
     postRedisplay Nothing

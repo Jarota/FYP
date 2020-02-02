@@ -5,8 +5,8 @@ module Types (
     Graph (..),
     Colour (..),
     ColourScheme (..),
-    {-Size,-}
     Vis (..),
+    ViewParams (..),
     convertColour
 ) where
 
@@ -22,7 +22,8 @@ data Graph x y = Scatter2D GraphTitle [GraphData x y]
 
 data Colour = Red | Green | Blue | White | Grey | Black
 
-{- A list of colours, starting with background colour, followed by colours to use for each data set -}
+{- A list of colours, starting with background colour,
+    followed by colours to use for each data set -}
 type ColourScheme = [Colour]
 
 -- Window size in pixels
@@ -30,6 +31,11 @@ type ColourScheme = [Colour]
 
 data Vis x y = Vis (Graph x y) ColourScheme -- Size
 
+data ViewParams = ViewParams {
+    zoom :: GLfloat,            -- scale factor
+    pan :: (GLfloat, GLfloat),  -- position to translate vis by
+    rot :: (GLfloat, GLfloat)   -- angles to rotate by (y axis, x axis)
+}
 
 convertColour :: Colour -> Color4 GLfloat
 convertColour c = case c of

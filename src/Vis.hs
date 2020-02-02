@@ -6,8 +6,8 @@ import Control.Monad
 import Types
 import Graphs
 
-renderVis :: Vis GLfloat GLfloat -> IO ()
-renderVis (Vis graph (c:cs)) = do
-        clearColor $= (convertColour c)
+renderVis :: Vis GLfloat GLfloat -> ViewParams -> IO ()
+renderVis (Vis graph cs) viewParams = do
+        clearColor $= (convertColour $ head cs)
         clear [ColorBuffer, DepthBuffer]
-        renderGraph graph cs
+        renderGraph graph cs viewParams

@@ -14,13 +14,13 @@ main = do
   _window <- createWindow "Hello World"
 
 
-  let visualisation = Vis (Scatter2D "TEST" [(Raw ([1, 2, 3], [7, 8, 9]))]) ([Types.Black, Types.Red] :: ColourScheme)
+  let visualisation = Vis (Scatter2D "TEST" [(Raw ([1, 3, 4, 5, 6, 7, 8, 9], [2, 1, 7, 3, 4, 8, 6, 9]))]) ([Types.Black, Types.Red] :: ColourScheme)
   vis <- newIORef visualisation
-  zoom <- newIORef 1
+  viewParams <- newIORef (ViewParams 1 (0, 0) (0, 0))
 
   reshapeCallback $= Just reshape
   depthFunc $= Just Less
-  keyboardMouseCallback $= Just (keyboardMouse zoom)
-  idleCallback $= Just (idle zoom)
-  displayCallback $= display vis zoom
+  keyboardMouseCallback $= Just (keyboardMouse viewParams)
+  idleCallback $= Just (idle viewParams)
+  displayCallback $= display vis viewParams
   mainLoop
