@@ -10,9 +10,11 @@ renderLines :: [(GLfloat, GLfloat, GLfloat)] -> IO ()
 renderLines [] = return ()
 renderLines xs = renderPrimitive Lines $ mapM_ vertex3f xs
 
-renderSquares :: [(GLfloat, GLfloat, GLfloat)] -> IO ()
-renderSquares [] = return ()
-renderSquares ps = renderPrimitive Quads $ mapM_ vertex3f ps
+renderSquares :: [(GLfloat, GLfloat, GLfloat)] -> GLfloat -> IO ()
+renderSquares [] _      = return ()
+renderSquares ps width  = renderPrimitive Quads $ mapM_ vertex3f ps'
+    where
+        ps' = concatMap (pointToSquare width) ps
 
 pointToSquare :: GLfloat -> (GLfloat, GLfloat, GLfloat) -> [(GLfloat, GLfloat, GLfloat)]
 pointToSquare l (x, y, z) = [
@@ -22,46 +24,44 @@ pointToSquare l (x, y, z) = [
         (x-l, y-l, z)
     ]
 
-renderTicks :: (GLfloat, GLfloat) -> (GLfloat, GLfloat) -> IO ()
-renderTicks (stepX, offX) (stepY, offY) | stepX <= 0.01 || stepY <= 0.01 = return ()
-                                        | otherwise = do
-                                            color $ convertColour Types.White
-                                            renderLines xs
-                                            renderLines ys
-                                            where
-                                                xs = generateTicks pointToTickX offX stepX
-                                                ys = generateTicks pointToTickY offY stepY
-
-generateTicks :: ( GLfloat -> GLfloat -> [(GLfloat, GLfloat, GLfloat)] ) -> GLfloat -> GLfloat -> [(GLfloat, GLfloat, GLfloat)]
-generateTicks pointToTick offset step = concatMap (pointToTick offset) steps
+renderCubes :: [(GLfloat, GLfloat, GLfloat)] -> GLfloat -> IO ()
+renderCubes [] _        = return ()
+renderCubes ps width    = do
+    renderPrimitive Quads $ mapM_ vertex3f ps'
+    color $ convertColour Types.White
+    renderPrimitive Lines $ mapM_ vertex3f ps''
     where
-        maxSteps = 2/step
-        steps = map (*step) [0..maxSteps]
+        ps' = concatMap (pointToCube width) ps
+        ps'' = concatMap (pointToCubeFrame width) ps
 
-pointToTickX :: GLfloat -> GLfloat -> [(GLfloat, GLfloat, GLfloat)]
-pointToTickX offset x   | x-offset > 0.8   = []
-                        | otherwise = [(x-offset, -0.8, 0), (x-offset, -0.78, 0)]
+renderBars :: [(GLfloat, GLfloat, GLfloat)] -> GLfloat -> IO ()
+renderBars [] _      = return ()
+renderBars ps width  = renderPrimitive Quads $ mapM_ vertex3f ps'
+    where
+        ps' = concatMap (pointToBar width) ps
 
-pointToTickY :: GLfloat -> GLfloat -> [(GLfloat, GLfloat, GLfloat)]
-pointToTickY offset y   | y-offset > 0.8   = []
-                        | otherwise = [(-0.8, y-offset, 0), (-0.78, y-offset, 0)]
+pointToBar :: GLfloat -> (GLfloat, GLfloat, GLfloat) -> [(GLfloat, GLfloat, GLfloat)]
+pointToBar l (x, y, z) = [
+        (x-l, y+l, z),
+        (x+l, y+l, z),
+        (x+l, -0.8, z),
+        (x-l, -0.8, z)
+    ]
 
+redoBackground :: [(GLfloat, GLfloat, GLfloat)] -> IO ()
+redoBackground ps = renderPrimitive Quads $ mapM_ vertex3f ps
 
-redoBackground :: IO ()
-redoBackground = renderPrimitive Quads $ mapM_ vertex3f bgPoints
+bgPoints2D :: [(GLfloat, GLfloat, GLfloat)]
+bgPoints2D = [
+        (-1, 1, 0.8), (-0.8, 1, 0.8), (-0.8, -0.8, 0.8), (-1, -0.8, 0.8),   -- Left
+        (-1, -0.8, 0.8), (1, -0.8, 0.8), (1, -1, 0.8), (-1, -1, 0.8)        -- Bottom
+    ]
 
-bgPoints :: [(GLfloat, GLfloat, GLfloat)]
-bgPoints = [
+bgPoints3D :: [(GLfloat, GLfloat, GLfloat)]
+bgPoints3D = [
         (-1, 1, 0), (-0.8, 1, 0), (-0.8, -0.8, 0), (-1, -0.8, 0),   -- Left
         (-1, -0.8, 0), (1, -0.8, 0), (1, -1, 0), (-1, -1, 0)        -- Bottom
     ]
-
-axes2D :: IO ()
-axes2D = do
-    color $ convertColour Types.White
-    renderPrimitive Lines $ mapM_ vertex3f
-        [ (-0.8, 0.8, 0), (-0.8, -0.8, 0),
-        (-0.8, -0.8, 0), (0.8, -0.8, 0) ]
 
 renderTitle :: String -> IO ()
 renderTitle title = preservingMatrix $ do
@@ -69,3 +69,95 @@ renderTitle title = preservingMatrix $ do
     color $ convertColour Types.White
     translate $ Vector3 0 100 (0::GLfloat)
     renderString Roman title
+
+pointToCube :: GLfloat -> (GLfloat, GLfloat, GLfloat) -> [(GLfloat, GLfloat, GLfloat)]
+pointToCube l (x, y, z) = [
+        -- front face
+        (x-l, y+l, z+l),
+        (x+l, y+l, z+l),
+        (x+l, y-l, z+l),
+        (x-l, y-l, z+l),
+        -- back face
+        (x-l, y+l, z-l),
+        (x+l, y+l, z-l),
+        (x+l, y-l, z-l),
+        (x-l, y-l, z-l),
+        -- left face
+        (x-l, y+l, z-l),
+        (x-l, y+l, z+l),
+        (x-l, y-l, z+l),
+        (x-l, y-l, z-l),
+        -- right face
+        (x+l, y+l, z-l),
+        (x+l, y+l, z+l),
+        (x+l, y-l, z+l),
+        (x+l, y-l, z-l),
+        -- top face
+        (x-l, y+l, z+l),
+        (x+l, y+l, z+l),
+        (x+l, y+l, z-l),
+        (x-l, y+l, z-l),
+        -- bottom face
+        (x-l, y-l, z+l),
+        (x+l, y-l, z+l),
+        (x+l, y-l, z-l),
+        (x-l, y-l, z-l)
+    ]
+
+pointToCubeFrame :: GLfloat -> (GLfloat, GLfloat, GLfloat) -> [(GLfloat, GLfloat, GLfloat)]
+pointToCubeFrame l (x, y, z) = [
+        -- front face
+        (x-l, y+l, z+l),
+        (x+l, y+l, z+l),
+        (x+l, y+l, z+l),
+        (x+l, y-l, z+l),
+        (x+l, y-l, z+l),
+        (x-l, y-l, z+l),
+        (x-l, y-l, z+l),
+        (x-l, y+l, z+l),
+        -- back face
+        (x-l, y+l, z-l),
+        (x+l, y+l, z-l),
+        (x+l, y+l, z-l),
+        (x+l, y-l, z-l),
+        (x+l, y-l, z-l),
+        (x-l, y-l, z-l),
+        (x-l, y-l, z-l),
+        (x-l, y+l, z-l),
+        -- left face
+        (x-l, y+l, z-l),
+        (x-l, y+l, z+l),
+        (x-l, y+l, z+l),
+        (x-l, y-l, z+l),
+        (x-l, y-l, z+l),
+        (x-l, y-l, z-l),
+        (x-l, y-l, z-l),
+        (x-l, y+l, z-l),
+        -- right face
+        (x+l, y+l, z-l),
+        (x+l, y+l, z+l),
+        (x+l, y+l, z+l),
+        (x+l, y-l, z+l),
+        (x+l, y-l, z+l),
+        (x+l, y-l, z-l),
+        (x+l, y-l, z-l),
+        (x+l, y+l, z-l),
+        -- top face
+        (x-l, y+l, z+l),
+        (x+l, y+l, z+l),
+        (x+l, y+l, z+l),
+        (x+l, y+l, z-l),
+        (x+l, y+l, z-l),
+        (x-l, y+l, z-l),
+        (x-l, y+l, z-l),
+        (x-l, y+l, z+l),
+        -- bottom face
+        (x-l, y-l, z+l),
+        (x+l, y-l, z+l),
+        (x+l, y-l, z+l),
+        (x+l, y-l, z-l),
+        (x+l, y-l, z-l),
+        (x-l, y-l, z-l),
+        (x-l, y-l, z-l),
+        (x-l, y-l, z+l)
+    ]
