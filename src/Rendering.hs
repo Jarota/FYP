@@ -67,7 +67,9 @@ renderTitle :: String -> IO ()
 renderTitle title = preservingMatrix $ do
     scale 0.001 0.001 (0.001::GLfloat)
     color $ convertColour Types.White
-    translate $ Vector3 0 100 (0::GLfloat)
+    width <- stringWidth Roman title
+    let offset = (fromIntegral width)/2
+    translate $ Vector3 (-offset) 800 (0::GLfloat)
     renderString Roman title
 
 pointToCube :: GLfloat -> (GLfloat, GLfloat, GLfloat) -> [(GLfloat, GLfloat, GLfloat)]
