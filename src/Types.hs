@@ -39,3 +39,6 @@ convertColour c = case c of
     Types.Grey      -> Color4 0.6 0.6 0.6 1
     Types.Black     -> Color4 0 0 0 1
     Types.Orange    -> Color4 1 0.5 0 1
+
+--                    Points To Render                 Size
+type RenderFunction = [(GLfloat, GLfloat, GLfloat)] -> GLfloat -> IO ()
