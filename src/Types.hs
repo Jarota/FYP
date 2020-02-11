@@ -1,17 +1,26 @@
+{-# LANGUAGE RecordWildCards, NamedFieldPuns #-}
+
 module Types where
 
 import Graphics.UI.GLUT
 
-data GraphData a    = XY ([a], [a])
-                    | XYZ ([a], [a], [a])
-                    -- | File String
+data GraphType  = Scatter2D
+                | Scatter3D
+                | Bar2D
+                deriving Eq
+
+data GraphData  = File String
+                | XY ([Float], [Float])
+                | XYZ ([Float], [Float], [Float])
 
 type AxisTitles = (String, String)
 type GraphTitle = String
 
-data Graph a    = Scatter2D GraphTitle [GraphData a]
-                | Bar2D GraphTitle [GraphData a]
-                | Scatter3D GraphTitle [GraphData a]
+data Graph = Graph {
+    gType :: GraphType,
+    gTitle :: GraphTitle,
+    gData :: [GraphData]
+}
 
 data Colour = Red | Green | Blue | White | Grey | Black | Orange
 
@@ -22,7 +31,7 @@ type ColourScheme = [Colour]
 -- Window size in pixels
 -- type Size = (Int, Int)
 
-data Vis a  = Vis (Graph a) ColourScheme -- Size
+data Vis = Vis Graph ColourScheme -- Size
 
 data ViewParams = ViewParams {
     zoom :: GLfloat,            -- scale factor
@@ -42,3 +51,13 @@ convertColour c = case c of
 
 --                    Points To Render                 Size
 type RenderFunction = [(GLfloat, GLfloat, GLfloat)] -> GLfloat -> IO ()
+
+visDataFile :: Vis -> String
+visDataFile (Vis graph _) = graphDataFile graph
+
+graphDataFile :: Graph -> String
+graphDataFile Graph{..} = dataFile $ head gData
+
+dataFile :: GraphData -> String
+dataFile (File s)   = s
+dataFile _          = ""

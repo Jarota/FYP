@@ -1,3 +1,5 @@
+{-# LANGUAGE RecordWildCards, NamedFieldPuns #-}
+
 module Graphs (renderGraph) where
 
 import Graphics.UI.GLUT
@@ -7,27 +9,27 @@ import Types
 import Rendering
 import Axes
 
-renderGraph :: Graph GLfloat -> [Colour] -> ViewParams -> DisplayCallback
-renderGraph (Scatter2D title ds) cs vp  = render2D title ds cs vp renderSquares
-renderGraph (Bar2D title ds) cs vp      = render2D title ds cs vp renderBars
-renderGraph (Scatter3D title ds) cs vp  = render3D title ds cs vp renderCubes
+renderGraph :: Graph -> [Colour] -> ViewParams -> DisplayCallback
+renderGraph Graph{..} cs vp | gType == Scatter2D    = render2D gTitle gData cs vp renderSquares
+                            | gType == Scatter3D    = render3D gTitle gData cs vp renderCubes
+                            | gType == Bar2D        = render2D gTitle gData cs vp renderBars
 
 {- 2D FUNCTIONS -}
 
-render2D :: String -> [GraphData GLfloat] -> [Colour] -> ViewParams -> RenderFunction -> DisplayCallback
+render2D :: String -> [GraphData] -> [Colour] -> ViewParams -> RenderFunction -> DisplayCallback
 render2D title ds (c:cs) viewParams dataFunc = do
     renderTitle title
     axes2D
     color $ convertColour c
     render2D' ds cs viewParams dataFunc
 
-render2D' :: [GraphData GLfloat] -> [Colour] -> ViewParams -> RenderFunction -> IO ()
+render2D' :: [GraphData] -> [Colour] -> ViewParams -> RenderFunction -> IO ()
 render2D' [] _ _ _                  = return ()
 render2D' (d:ds) (c:cs) vp dataFunc = do
     renderData2D d c vp dataFunc
     render2D' ds cs vp dataFunc
 
-renderData2D :: GraphData GLfloat -> Colour -> ViewParams -> RenderFunction -> IO ()
+renderData2D :: GraphData -> Colour -> ViewParams -> RenderFunction -> IO ()
 renderData2D (XY (xs, ys)) c vp dataFunc  = do
     renderTicks2D ticksX ticksY
     color $ convertColour c
@@ -46,7 +48,7 @@ renderData2D _ _ _ _ = return ()
 
 {- 3D FUNCTIONS -}
 
-render3D :: String -> [GraphData GLfloat] -> [Colour] -> ViewParams -> RenderFunction -> DisplayCallback
+render3D :: String -> [GraphData] -> [Colour] -> ViewParams -> RenderFunction -> DisplayCallback
 render3D title ds (c:cs) viewParams dataFunc = do
     renderTitle title
     rotateView degrees
@@ -55,13 +57,13 @@ render3D title ds (c:cs) viewParams dataFunc = do
     where
         degrees = rot viewParams
 
-render3D' :: [GraphData GLfloat] -> [Colour] -> ViewParams -> RenderFunction -> IO ()
+render3D' :: [GraphData] -> [Colour] -> ViewParams -> RenderFunction -> IO ()
 render3D' [] _ _ _                  = return ()
 render3D' (d:ds) (c:cs) vp dataFunc = do
     renderData3D d c vp dataFunc
     render3D' ds cs vp dataFunc
 
-renderData3D :: GraphData GLfloat -> Colour -> ViewParams -> RenderFunction -> IO ()
+renderData3D :: GraphData -> Colour -> ViewParams -> RenderFunction -> IO ()
 renderData3D (XYZ (xs, ys, zs)) c vp dataFunc  = do
     color $ convertColour c
     dataFunc ps $ (minDifference xs') * 0.3

@@ -10,36 +10,43 @@ import Display
 import Bindings
 import Types
 
-import Data.Scientific
 import Data.Void
-import Data.Text (Text)
+import Data.Text
 import Text.Megaparsec
 
 main :: IO ()
 main = do
-    dataFile <- readFile "/home/jim/college/fyp/data.txt"
-    print . words $ dataFile
-
-
-    let res = runParser p "" "123"
-    print res
-
-{-
     (_progName, _args) <- getArgsAndInitialize
-    initialDisplayMode $= [WithDepthBuffer, DoubleBuffered]
-    _window <- createWindow "DataVis"
 
-    let visualisation = Vis (Scatter3D "TEST" [(XYZ ([1, 3, 4, 5, 6, 7, 8, 9], [2, 1, 7, 3, 4, 8, 6, 9], [5, 2, 8, 3, 4, 1, 6, 9]))]) ([Types.Black, Types.Red] :: ColourScheme)
-    vis <- newIORef visualisation
-    viewParams <- newIORef (ViewParams 1 (-25, 35) (0, 0))
+    let testGraph = Graph Scatter2D "TEST" [(File "/home/jim/college/fyp/data.txt")]
+    let testVis = Vis testGraph ([Types.Black, Types.Red] :: ColourScheme)
 
-    reshapeCallback $= Just reshape
-    depthFunc $= Just Less
-    keyboardMouseCallback $= Just (keyboardMouse viewParams)
-    idleCallback $= Just (idle viewParams)
-    displayCallback $= display vis viewParams
-    mainLoop
--}
+    dataFile <- readFile $ visDataFile testVis
+    let res = runParser pCSV "" $ pack dataFile
+    if (not (success res)) then do
+        print res
+        error "Error reading data from file."
+    else do
 
-readInt :: String -> Int
-readInt = read
+        {-
+            Put parsed data into a XY GraphData yoke
+            and make a new Vis
+        -}
+
+
+        vis <- newIORef visualisation
+        viewParams <- newIORef (ViewParams 1 (-25, 35) (0, 0))
+
+        initialDisplayMode $= [WithDepthBuffer, DoubleBuffered]
+        _window <- createWindow "DataVis"
+
+        reshapeCallback $= Just reshape
+        depthFunc $= Just Less
+        keyboardMouseCallback $= Just (keyboardMouse viewParams)
+        idleCallback $= Just (idle viewParams)
+        displayCallback $= display vis viewParams
+        mainLoop
+
+success :: Either l r -> Bool
+success (Right _)	= True
+success _			= False

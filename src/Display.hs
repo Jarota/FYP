@@ -7,7 +7,7 @@ import Data.IORef
 import Types
 import Vis
 
-display :: IORef (Vis GLfloat)-> IORef ViewParams -> DisplayCallback
+display :: IORef Vis-> IORef ViewParams -> DisplayCallback
 display visRef vpRef = do
     vis <- get visRef
     viewParams <- get vpRef

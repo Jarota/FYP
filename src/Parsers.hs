@@ -2,7 +2,6 @@
 
 module Parsers where
 
-import Control.Applicative
 import Control.Monad
 import Data.Text (Text)
 import Data.Void
@@ -16,5 +15,16 @@ import Types
 
 type Parser = Parsec Void Text
 
-p :: Parser Scientific
-p = L.scientific
+pCSV :: Parser [Float]
+pCSV = do
+    some pFloat
+
+pFloat :: Parser Float
+pFloat = do
+	x <- L.scientific
+	void separator
+	return (toRealFloat x)
+
+separator :: Parser Char
+separator = char ','
+	<|>		char '\n'
