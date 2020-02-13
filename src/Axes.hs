@@ -25,6 +25,7 @@ renderTicks2D :: (GLfloat, GLfloat) -> (GLfloat, GLfloat) -> IO ()
 renderTicks2D (stepX, offX) (stepY, offY)   | stepX <= 0.01 || stepY <= 0.01 = return ()
                                             | otherwise = do
                                                 color $ convertColour Types.White
+                                                print "Made it to Here!"
                                                 renderLines xs
                                                 renderLines ys
                                                 where
@@ -47,7 +48,7 @@ renderTicks3D (stepX, offX) (stepY, offY) (stepZ, offZ) | stepX <= 0.01 || stepY
 generateTicks :: ( GLfloat -> GLfloat -> [(GLfloat, GLfloat, GLfloat)] ) -> GLfloat -> GLfloat -> [(GLfloat, GLfloat, GLfloat)]
 generateTicks pointToTick offset step = concatMap (pointToTick offset) steps
     where
-        maxSteps = 2/step
+        maxSteps = 10/step
         steps = map (*step) [0..maxSteps]
 
 pointToTickX :: GLfloat -> GLfloat -> [(GLfloat, GLfloat, GLfloat)]

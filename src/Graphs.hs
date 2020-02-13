@@ -2,7 +2,7 @@
 
 module Graphs (renderGraph) where
 
-import Graphics.UI.GLUT
+import Graphics.UI.GLUT hiding (TwoD, ThreeD)
 import Control.Monad
 import Data.IORef
 import Types
@@ -10,18 +10,17 @@ import Rendering
 import Axes
 
 renderGraph :: Graph -> [Colour] -> ViewParams -> DisplayCallback
-renderGraph Graph{..} cs vp | gType == Scatter2D    = render2D gTitle gData cs vp renderSquares
-                            | gType == Scatter3D    = render3D gTitle gData cs vp renderCubes
-                            | gType == Bar2D        = render2D gTitle gData cs vp renderBars
+renderGraph Graph{..} cs vp | gType == TwoD     = render2D Graph{..} cs vp
+                            | gType == ThreeD   = render3D Graph{..} cs vp
 
 {- 2D FUNCTIONS -}
 
-render2D :: String -> [GraphData] -> [Colour] -> ViewParams -> RenderFunction -> DisplayCallback
-render2D title ds (c:cs) viewParams dataFunc = do
-    renderTitle title
+render2D :: Graph -> [Colour] -> ViewParams -> DisplayCallback
+render2D Graph{..} (c:cs) viewParams = do
+    renderTitle gTitle
     axes2D
     color $ convertColour c
-    render2D' ds cs viewParams dataFunc
+    render2D' gData cs viewParams gFunc
 
 render2D' :: [GraphData] -> [Colour] -> ViewParams -> RenderFunction -> IO ()
 render2D' [] _ _ _                  = return ()
@@ -32,6 +31,7 @@ render2D' (d:ds) (c:cs) vp dataFunc = do
 renderData2D :: GraphData -> Colour -> ViewParams -> RenderFunction -> IO ()
 renderData2D (XY (xs, ys)) c vp dataFunc  = do
     renderTicks2D ticksX ticksY
+    print "Made it to Here!"
     color $ convertColour c
     dataFunc ps $ (minDifference xs') * 0.35
     where
@@ -44,16 +44,16 @@ renderData2D (XY (xs, ys)) c vp dataFunc  = do
         ticksX  = tickStepAndOffset xs''
         ticksY  = tickStepAndOffset ys''
 
-renderData2D _ _ _ _ = return ()
+
 
 {- 3D FUNCTIONS -}
 
-render3D :: String -> [GraphData] -> [Colour] -> ViewParams -> RenderFunction -> DisplayCallback
-render3D title ds (c:cs) viewParams dataFunc = do
-    renderTitle title
+render3D :: Graph -> [Colour] -> ViewParams -> DisplayCallback
+render3D Graph{..} (c:cs) viewParams = do
+    renderTitle gTitle
     rotateView degrees
     scale 0.7 0.7 (0.7 :: GLfloat)
-    render3D' ds cs viewParams dataFunc
+    render3D' gData cs viewParams gFunc
     where
         degrees = rot viewParams
 
@@ -80,8 +80,6 @@ renderData3D (XYZ (xs, ys, zs)) c vp dataFunc  = do
         ticksY  = tickStepAndOffset ys'
         ticksZ  = tickStepAndOffset zs'
 
-renderData3D _ _ _ _ = return ()
-
 {- HELPER FUNCTIONS -}
 
 fitData :: [GLfloat] -> [GLfloat]
@@ -91,6 +89,7 @@ fitData xs = map (\x -> -0.8 + (x * step)) xs
         step    = 1.6 / range
 
 tickStepAndOffset :: [GLfloat] -> (GLfloat, GLfloat)
+tickStepAndOffset [] = (1, 1)
 tickStepAndOffset xs = (step, offset)
     where
         step    = minDifference xs
@@ -102,7 +101,8 @@ adjustOffset offset step    | offset >= 0.8 = offset
                             | otherwise     = adjustOffset (offset+step) step
 
 minDifference :: (Num a, Ord a) => [a] -> a
-minDifference xs = minimum $ map abs $ zipWith (-) xs (drop 1 xs)
+miniDifference [x]  = 1
+minDifference xs    = minimum $ map abs $ zipWith (-) xs (drop 1 xs)
 
 rotateView :: (GLfloat, GLfloat) -> IO ()
 rotateView (x, y) = do

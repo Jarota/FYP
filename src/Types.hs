@@ -4,9 +4,8 @@ module Types where
 
 import Graphics.UI.GLUT
 
-data GraphType  = Scatter2D
-                | Scatter3D
-                | Bar2D
+data GraphType  = TwoD
+                | ThreeD
                 deriving Eq
 
 data GraphData  = File String
@@ -19,8 +18,12 @@ type GraphTitle = String
 data Graph = Graph {
     gType :: GraphType,
     gTitle :: GraphTitle,
-    gData :: [GraphData]
+    gData :: [GraphData],
+    gFunc :: RenderFunction
 }
+--                    Points To Render                 Size
+type RenderFunction = [(GLfloat, GLfloat, GLfloat)] -> GLfloat -> IO ()
+
 
 data Colour = Red | Green | Blue | White | Grey | Black | Orange
 
@@ -48,16 +51,3 @@ convertColour c = case c of
     Types.Grey      -> Color4 0.6 0.6 0.6 1
     Types.Black     -> Color4 0 0 0 1
     Types.Orange    -> Color4 1 0.5 0 1
-
---                    Points To Render                 Size
-type RenderFunction = [(GLfloat, GLfloat, GLfloat)] -> GLfloat -> IO ()
-
-visDataFile :: Vis -> String
-visDataFile (Vis graph _) = graphDataFile graph
-
-graphDataFile :: Graph -> String
-graphDataFile Graph{..} = dataFile $ head gData
-
-dataFile :: GraphData -> String
-dataFile (File s)   = s
-dataFile _          = ""
