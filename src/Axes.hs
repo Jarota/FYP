@@ -25,7 +25,6 @@ renderTicks2D :: (GLfloat, GLfloat) -> (GLfloat, GLfloat) -> IO ()
 renderTicks2D (stepX, offX) (stepY, offY)   | stepX <= 0.01 || stepY <= 0.01 = return ()
                                             | otherwise = do
                                                 color $ convertColour Types.White
-                                                print "Made it to Here!"
                                                 renderLines xs
                                                 renderLines ys
                                                 where

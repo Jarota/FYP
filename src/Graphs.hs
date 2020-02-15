@@ -31,7 +31,6 @@ render2D' (d:ds) (c:cs) vp dataFunc = do
 renderData2D :: GraphData -> Colour -> ViewParams -> RenderFunction -> IO ()
 renderData2D (XY (xs, ys)) c vp dataFunc  = do
     renderTicks2D ticksX ticksY
-    print "Made it to Here!"
     color $ convertColour c
     dataFunc ps $ (minDifference xs') * 0.35
     where
@@ -43,7 +42,7 @@ renderData2D (XY (xs, ys)) c vp dataFunc  = do
         ps      = zip3 xs'' ys'' $ repeat (-0.8::GLfloat)
         ticksX  = tickStepAndOffset xs''
         ticksY  = tickStepAndOffset ys''
-
+renderData2D _ _ _ _ = return ()
 
 
 {- 3D FUNCTIONS -}
@@ -79,6 +78,7 @@ renderData3D (XYZ (xs, ys, zs)) c vp dataFunc  = do
         ticksX  = tickStepAndOffset xs''
         ticksY  = tickStepAndOffset ys'
         ticksZ  = tickStepAndOffset zs'
+renderData3D _ _ _ _ = return ()
 
 {- HELPER FUNCTIONS -}
 
@@ -101,8 +101,8 @@ adjustOffset offset step    | offset >= 0.8 = offset
                             | otherwise     = adjustOffset (offset+step) step
 
 minDifference :: (Num a, Ord a) => [a] -> a
-miniDifference [x]  = 1
-minDifference xs    = minimum $ map abs $ zipWith (-) xs (drop 1 xs)
+minDifference xs    | length xs == 1    = 1
+                    | otherwise         = minimum $ map abs $ zipWith (-) xs (drop 1 xs)
 
 rotateView :: (GLfloat, GLfloat) -> IO ()
 rotateView (x, y) = do

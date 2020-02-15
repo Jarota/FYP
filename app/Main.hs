@@ -11,7 +11,7 @@ import Display
 import Bindings
 import Types
 
-import Data.Either (fromRight)
+import Data.Either (rights)
 import Data.Void
 import Data.Text hiding (map, foldr)
 import Text.Megaparsec
@@ -20,35 +20,38 @@ main :: IO ()
 main = do
     (_progName, _args) <- getArgsAndInitialize
 
-    let testGraph = Graph TwoD "TEST" [(File "/home/jim/college/fyp/data.txt")] renderSquares
-    let testVis = Vis testGraph ([Types.Black, Types.Red] :: ColourScheme)
+    let testGraph = Graph TwoD renderBars "Yeehaw" [(File "/home/jim/college/fyp/data2.csv")]
+    let inputVis = Vis testGraph ([Types.Orange, Types.Blue] :: ColourScheme)
 
-    dataFile <- readFile $ "/home/jim/college/fyp/data.txt"
-    let res = runParser pCSV2 "" $ pack dataFile
-    if (not (success res)) then do
-        print res
-        error "Error reading data from file."
-    else do
-        let rawData = XY $ unzip $ fromRight [(0.0::Float,0.0::Float)] res
-        {-
-            Put parsed data into a XY GraphData yoke
-            and make a new Vis
-        -}
+    let paths = getVisPaths inputVis
+    let ioFiles = map readFile paths
+    dataFiles <- sequence ioFiles
+    let dataFiles' = map pack dataFiles
+    let graphData = toGraphData (visType inputVis) dataFiles'
 
-        let visualisation = Vis (Graph TwoD "TEST" [(XY ([1], [1]))] renderSquares) ([Types.Black, Types.Red] :: ColourScheme)
-        vis <- newIORef visualisation
-        viewParams <- newIORef (ViewParams 1 (-25, 35) (0, 0))
+    let visualisation = replaceVisPaths inputVis graphData
+    vis <- newIORef visualisation
+    viewParams <- newIORef (ViewParams 1 (-25, 35) (0, 0))
 
-        initialDisplayMode $= [WithDepthBuffer, DoubleBuffered]
-        _window <- createWindow "DataVis"
+    initialDisplayMode $= [WithDepthBuffer, DoubleBuffered]
+    _window <- createWindow "DataVis"
+    reshapeCallback $= Just reshape
+    depthFunc $= Just Less
+    keyboardMouseCallback $= Just (keyboardMouse viewParams)
+    idleCallback $= Just (idle viewParams)
+    displayCallback $= display vis viewParams
+    mainLoop
 
-        reshapeCallback $= Just reshape
-        depthFunc $= Just Less
-        keyboardMouseCallback $= Just (keyboardMouse viewParams)
-        idleCallback $= Just (idle viewParams)
-        displayCallback $= display vis viewParams
-        mainLoop
 
-success :: Either l r -> Bool
-success (Right _)   = True
-success _           = False
+toGraphData :: GraphType -> [Text] -> [GraphData]
+toGraphData TwoD dataFiles = graphData
+    where
+        parsedData = map (runParser pCSV2 "") dataFiles
+        res = rights parsedData
+        graphData = map XY $ map unzip res
+
+toGraphData ThreeD dataFiles = graphData
+    where
+        parsedData = map (runParser pCSV3 "") dataFiles
+        res = rights parsedData
+        graphData = map XYZ $ map unzip3 res
