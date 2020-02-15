@@ -47,7 +47,7 @@ renderTicks3D (stepX, offX) (stepY, offY) (stepZ, offZ) | stepX <= 0.01 || stepY
 generateTicks :: ( GLfloat -> GLfloat -> [(GLfloat, GLfloat, GLfloat)] ) -> GLfloat -> GLfloat -> [(GLfloat, GLfloat, GLfloat)]
 generateTicks pointToTick offset step = concatMap (pointToTick offset) steps
     where
-        maxSteps = 2/step
+        maxSteps = 10/step
         steps = map (*step) [0..maxSteps]
 
 pointToTickX :: GLfloat -> GLfloat -> [(GLfloat, GLfloat, GLfloat)]
