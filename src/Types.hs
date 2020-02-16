@@ -1,4 +1,4 @@
-{-# LANGUAGE RecordWildCards, NamedFieldPuns #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Types where
 
@@ -21,19 +21,14 @@ data Graph = Graph {
     gTitle :: GraphTitle,
     gData :: [GraphData]
 }
---                    Points To Render                 Size
+
 type RenderFunction = [(GLfloat, GLfloat, GLfloat)] -> GLfloat -> IO ()
 
-
-data Colour = Red | Green | Blue | White | Grey | Black | Orange
-
-{- A list of colours, starting with background colour,
-    followed by colours to use for each data set -}
-type ColourScheme = [Colour]
+data Colour = Red | Green | Blue | White | Grey | Black | Orange | Purple
 
 data Vis = Vis {
     graph :: Graph,
-    colours :: ColourScheme
+    colours :: [Colour]
 }
 
 data ViewParams = ViewParams {
@@ -51,6 +46,7 @@ convertColour c = case c of
     Types.Grey      -> Color4 0.6 0.6 0.6 1
     Types.Black     -> Color4 0 0 0 1
     Types.Orange    -> Color4 1 0.5 0 1
+    Types.Purple    -> Color4 0.5 0 0.5 1
 
 getVisPaths :: Vis -> [String]
 getVisPaths Vis{..} = getGraphPaths graph

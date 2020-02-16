@@ -20,8 +20,8 @@ main :: IO ()
 main = do
     (_progName, _args) <- getArgsAndInitialize
 
-    let testGraph = Graph TwoD renderBars "Yeehaw" [(File "/home/jim/college/fyp/data2.csv")]
-    let inputVis = Vis testGraph ([Types.Orange, Types.Blue] :: ColourScheme)
+    let testGraph = Graph TwoD renderLine "Yeehaw" [(File "/home/jim/college/fyp/data2.csv")]
+    let inputVis = Vis testGraph ([Types.Orange, Types.Blue :: Colour])
 
     let paths = getVisPaths inputVis
     let ioFiles = map readFile paths

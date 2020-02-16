@@ -8,7 +8,11 @@ vertex3f (x, y, z) = vertex $ Vertex3 x y z
 
 renderLines :: [(GLfloat, GLfloat, GLfloat)] -> IO ()
 renderLines [] = return ()
-renderLines xs = renderPrimitive Lines $ mapM_ vertex3f xs
+renderLines ps = renderPrimitive Lines $ mapM_ vertex3f ps
+
+renderLine :: [(GLfloat, GLfloat, GLfloat)] -> GLfloat -> IO ()
+renderLine [] _     = return ()
+renderLine ps _     = renderPrimitive LineStrip $ mapM_ vertex3f ps
 
 renderSquares :: [(GLfloat, GLfloat, GLfloat)] -> GLfloat -> IO ()
 renderSquares [] _      = return ()
@@ -35,8 +39,8 @@ renderCubes ps width    = do
         ps'' = concatMap (pointToCubeFrame width) ps
 
 renderBars :: [(GLfloat, GLfloat, GLfloat)] -> GLfloat -> IO ()
-renderBars [] _      = return ()
-renderBars ps width  = renderPrimitive Quads $ mapM_ vertex3f ps'
+renderBars [] _     = return ()
+renderBars ps width = renderPrimitive Quads $ mapM_ vertex3f ps'
     where
         ps' = concatMap (pointToBar width) ps
 
@@ -71,6 +75,7 @@ renderTitle title = preservingMatrix $ do
     let offset = (fromIntegral width)/2
     translate $ Vector3 (-offset) 800 (0::GLfloat)
     renderString Roman title
+
 
 pointToCube :: GLfloat -> (GLfloat, GLfloat, GLfloat) -> [(GLfloat, GLfloat, GLfloat)]
 pointToCube l (x, y, z) = [
