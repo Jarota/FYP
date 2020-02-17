@@ -11,36 +11,48 @@ import Display
 import Bindings
 import Types
 
-import Data.Either (rights)
+import qualified Data.List.NonEmpty as NE
+import qualified Data.Set as S
+import Data.Either (isLeft, fromLeft, rights, fromRight)
 import Data.Void
-import Data.Text hiding (map, foldr)
+import Data.Text hiding (map, head)
 import Text.Megaparsec
 
 main :: IO ()
 main = do
     (_progName, _args) <- getArgsAndInitialize
+    vis <- parseInput _args
+    if isLeft vis
+        then do
+            let errors = fromLeft defaultErrorBundle vis
+            print (errorBundlePretty errors)
+        else do
+            let inputVis = fromRight demoVis vis
+            let paths = getVisPaths inputVis
+            print paths
+            let ioFiles = map readFile paths
+            dataFiles <- sequence ioFiles
+            let dataFiles' = map pack dataFiles
+            let graphData = toGraphData (visType inputVis) dataFiles'
 
-    let testGraph = Graph TwoD renderLine "Yeehaw" [(File "/home/jim/college/fyp/data2.csv")]
-    let inputVis = Vis testGraph ([Types.Orange, Types.Blue :: Colour])
+            let visualisation = replaceVisPaths inputVis graphData
+            vis <- newIORef visualisation
+            viewParams <- newIORef (ViewParams 1 (-25, 35) (0, 0))
 
-    let paths = getVisPaths inputVis
-    let ioFiles = map readFile paths
-    dataFiles <- sequence ioFiles
-    let dataFiles' = map pack dataFiles
-    let graphData = toGraphData (visType inputVis) dataFiles'
+            initialDisplayMode $= [WithDepthBuffer, DoubleBuffered]
+            _window <- createWindow "DataVis"
+            reshapeCallback $= Just reshape
+            depthFunc $= Just Less
+            keyboardMouseCallback $= Just (keyboardMouse viewParams)
+            idleCallback $= Just (idle viewParams)
+            displayCallback $= display vis viewParams
+            mainLoop
 
-    let visualisation = replaceVisPaths inputVis graphData
-    vis <- newIORef visualisation
-    viewParams <- newIORef (ViewParams 1 (-25, 35) (0, 0))
-
-    initialDisplayMode $= [WithDepthBuffer, DoubleBuffered]
-    _window <- createWindow "DataVis"
-    reshapeCallback $= Just reshape
-    depthFunc $= Just Less
-    keyboardMouseCallback $= Just (keyboardMouse viewParams)
-    idleCallback $= Just (idle viewParams)
-    displayCallback $= display vis viewParams
-    mainLoop
+-- parseInput :: [String] -> Either (ParseErrorBundle Text Void) Vis
+parseInput []   = return $ Right demoVis
+parseInput args = do
+    input <- readFile $ head args
+    return $ runParser pVis "" $ pack input
 
 
 toGraphData :: GraphType -> [Text] -> [GraphData]
@@ -55,3 +67,13 @@ toGraphData ThreeD dataFiles = graphData
         parsedData = map (runParser pCSV3 "") dataFiles
         res = rights parsedData
         graphData = map XYZ $ map unzip3 res
+
+
+demoVis :: Vis
+demoVis = Vis demoGraph ([Types.Grey, Types.Orange :: Colour])
+
+demoGraph :: Graph
+demoGraph = Graph TwoD renderSquares "Demo" [(File "/home/jim/college/fyp/data2.csv")]
+
+-- defaultErrorBundle :: ParseErrorBundle e s
+defaultErrorBundle = ParseErrorBundle ((TrivialError 0 Nothing S.empty)NE.:|[]) (PosState "" 0 (SourcePos "" (mkPos 0) (mkPos 0)) (mkPos 0) "")

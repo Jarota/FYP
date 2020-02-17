@@ -82,6 +82,7 @@ pRenderFunction ThreeD = do
 pTitle :: Parser GraphTitle
 pTitle = do
     title <- some alphaNumChar
+
     return title
 
 pGraphData :: GraphType -> Parser GraphData
@@ -132,10 +133,18 @@ pListItem = do
 
 pFilePath :: Parser String
 pFilePath = do
-    letterChar
-    some alphaNumChar
-    char '.'
-    some alphaNumChar
+    ps  <- some pPathComponent
+    dot <- char '.'
+    x   <- letterChar
+    xs  <- many alphaNumChar
+    return $ (concat ps) ++ [dot] ++ [x] ++ xs
+
+pPathComponent :: Parser String
+pPathComponent = do
+    slash   <- char '/'
+    x       <- letterChar
+    xs      <- many alphaNumChar
+    return $ [slash] ++ [x] ++ xs
 
 {- Data File Parsers -}
 

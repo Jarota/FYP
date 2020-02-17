@@ -27,6 +27,7 @@ dependencies:
 - text
 - void
 - scientific
+- containers
 
 library:
   source-dirs: src
