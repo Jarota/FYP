@@ -1,5 +1,4 @@
-2DBar
-YippeeYahoo
+YourTitleHere
+2DScatter
 File /home/jim/college/fyp/data2.csv
-
-Black,Green
+Black,Red,Green

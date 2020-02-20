@@ -22,7 +22,6 @@ type Parser = Parsec Void Text
 pVis :: Parser Vis
 pVis = do
     graph <- pGraph
-    void newline
     colours <- pColours
     return (Vis graph colours)
 
@@ -32,8 +31,7 @@ pColours = do
     cs <- some $ do
         void (char ',')
         pColour
-    let colours = c:cs
-    return colours
+    return (c:cs)
 
 pColour :: Parser Colour
 pColour = choice [
@@ -48,10 +46,10 @@ pColour = choice [
 
 pGraph :: Parser Graph
 pGraph = do
+    gTitle <- pTitle
+    void newline
     gType <- pGraphType
     gFunc <- pRenderFunction gType
-    void newline
-    gTitle <- pTitle
     void newline
     gData <- some (pGraphData gType)
     return Graph{..}
@@ -97,6 +95,7 @@ pGraphData TwoD = do
         void newline
         void (string "y:")
         ys <- pList
+        void newline
         return $ XY (xs, ys)
 
 pGraphData ThreeD = do
@@ -113,6 +112,7 @@ pGraphData ThreeD = do
         void newline
         void (string "z:")
         zs <- pList
+        void newline
         return $ XYZ (xs, ys, zs)
 
 pList :: Parser [Float]

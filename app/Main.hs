@@ -29,7 +29,6 @@ main = do
         else do
             let inputVis = fromRight demoVis vis
             let paths = getVisPaths inputVis
-            print paths
             let ioFiles = map readFile paths
             dataFiles <- sequence ioFiles
             let dataFiles' = map pack dataFiles
