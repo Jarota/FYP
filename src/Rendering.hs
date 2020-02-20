@@ -55,14 +55,14 @@ pointToBar l (x, y, z) = [
 redoBackground :: [(GLfloat, GLfloat, GLfloat)] -> IO ()
 redoBackground ps = renderPrimitive Quads $ mapM_ vertex3f ps
 
-bgPoints2D :: [(GLfloat, GLfloat, GLfloat)]
-bgPoints2D = [
-        (-1, 1, 0.8), (-0.8, 1, 0.8), (-0.8, -0.8, 0.8), (-1, -0.8, 0.8),   -- Left
-        (-1, -0.8, 0.8), (1, -0.8, 0.8), (1, -1, 0.8), (-1, -1, 0.8)        -- Bottom
+bg2D :: [(GLfloat, GLfloat, GLfloat)]
+bg2D = [
+        (-1, 1, 0), (-0.8, 1, 0), (-0.8, -0.8, 0), (-1, -0.8, 0),   -- Left
+        (-1, -0.8, 0), (1, -0.8, 0), (1, -1, 0), (-1, -1, 0)        -- Bottom
     ]
 
-bgPoints3D :: [(GLfloat, GLfloat, GLfloat)]
-bgPoints3D = [
+bg3D :: [(GLfloat, GLfloat, GLfloat)]
+bg3D = [
         (-1, 1, 0), (-0.8, 1, 0), (-0.8, -0.8, 0), (-1, -0.8, 0),   -- Left
         (-1, -0.8, 0), (1, -0.8, 0), (1, -1, 0), (-1, -1, 0)        -- Bottom
     ]

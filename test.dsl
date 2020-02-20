@@ -1,4 +1,4 @@
 YourTitleHere
-2DScatter
-File /home/jim/college/fyp/data2.csv
-Black,Red,Green
+3DScatter
+File /home/jim/college/fyp/data3.csv
+Black,Red
