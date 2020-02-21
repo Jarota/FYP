@@ -20,28 +20,32 @@ fitVisData (Vis graph cs) = Vis (fitGraphData graph) cs
 fitGraphData :: Graph -> Graph
 fitGraphData Graph{..} = Graph gType gFunc gTitle gData'
     where
-        gData' = map fitData gData
+        stepX   = 1.6 / (maximum $ concat $ map getXs gData)
+        stepY   = 1.6 / (maximum $ concat $ map getYs gData)
+        stepZ   = 1.6 / (maximum $ concat $ map getZs gData)
+        gData'  = map (fitData stepX stepY stepZ) gData
 
-fitData :: GraphData -> GraphData
-fitData (XY (xs, ys)) = XY (xs', ys')
+getXs :: GraphData -> [GLfloat]
+getXs (XY (xs, _)) = xs
+getXs (XYZ (xs, _, _)) = xs
+
+getYs :: GraphData -> [GLfloat]
+getYs (XY (_, ys)) = ys
+getYs (XYZ (_, ys, _)) = ys
+
+getZs :: GraphData -> [GLfloat]
+getZs (XYZ (_, _, zs)) = zs
+
+fitData :: GLfloat -> GLfloat -> GLfloat -> GraphData -> GraphData
+fitData stepX stepY _ (XY (xs, ys)) = XY (xs', ys')
     where
-        rangeX  = maximum xs
-        stepX   = 1.6 / rangeX
         xs'     = map (\x -> -0.8 + (x * stepX)) xs
-        rangeY  = maximum ys
-        stepY   = 1.6 / rangeY
         ys'     = map (\x -> -0.8 + (x * stepY)) ys
 
-fitData (XYZ (xs, ys, zs)) = XYZ (xs', ys', zs')
+fitData stepX stepY stepZ (XYZ (xs, ys, zs)) = XYZ (xs', ys', zs')
     where
-        rangeX  = maximum xs
-        stepX   = 1.6 / rangeX
         xs'     = map (\x -> -0.8 + (x * stepX)) xs
-        rangeY  = maximum ys
-        stepY   = 1.6 / rangeY
         ys'     = map (\x -> -0.8 + (x * stepY)) ys
-        rangeZ  = maximum zs
-        stepZ   = 1.6 / rangeZ
         zs'     = map (\x -> -0.8 + (x * stepZ)) zs
 
 
