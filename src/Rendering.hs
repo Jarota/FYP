@@ -76,6 +76,22 @@ renderTitle title = preservingMatrix $ do
     translate $ Vector3 (-offset) 800 (0::GLfloat)
     renderString Roman title
 
+axisLabels2D :: [String] -> IO ()
+axisLabels2D (y:(x:_)) = preservingMatrix $ do
+    color $ convertColour Types.White
+    scale 0.0005 0.0005 (0.0005::GLfloat)
+    preservingMatrix $ do
+        widthY <- stringWidth Roman y
+        let offsetY = (fromIntegral widthY)/2
+        rotate 90 $ Vector3 0 0 (1::GLfloat)
+        translate $ Vector3 (-offsetY) (1800) (0::GLfloat)
+        renderString Roman y
+    preservingMatrix $ do
+        widthX <- stringWidth Roman x
+        let offsetX = (fromIntegral widthX)/2
+        translate $ Vector3 (-offsetX) (-1800) (0::GLfloat)
+        renderString Roman x
+
 
 pointToCube :: GLfloat -> (GLfloat, GLfloat, GLfloat) -> [(GLfloat, GLfloat, GLfloat)]
 pointToCube l (x, y, z) = [

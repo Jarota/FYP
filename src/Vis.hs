@@ -18,7 +18,7 @@ fitVisData :: Vis -> Vis
 fitVisData (Vis graph cs) = Vis (fitGraphData graph) cs
 
 fitGraphData :: Graph -> Graph
-fitGraphData Graph{..} = Graph gType gFunc gTitle gData'
+fitGraphData Graph{..} = Graph gType gFunc gTitle gAxes gData'
     where
         stepX   = 1.6 / (maximum $ concat $ map getXs gData)
         stepY   = 1.6 / (maximum $ concat $ map getYs gData)
@@ -66,7 +66,7 @@ replaceVisPaths Vis{..} parsedData = Vis newGraph colours
         newGraph = replaceGraphPaths graph parsedData
 
 replaceGraphPaths :: Graph -> [GraphData] -> Graph
-replaceGraphPaths Graph{..} parsedData = Graph gType gFunc gTitle newData
+replaceGraphPaths Graph{..} parsedData = Graph gType gFunc gTitle gAxes newData
     where
         newData = replaceDataPaths gData parsedData
 

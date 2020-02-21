@@ -18,6 +18,7 @@ renderGraph Graph{..} cs vp | gType == TwoD     = render2D Graph{..} cs vp
 render2D :: Graph -> [Colour] -> ViewParams -> DisplayCallback
 render2D Graph{..} (c:cs) vp = do
     renderTitle gTitle
+    axisLabels2D gAxes
     axes2D
     renderTicks2D ticksX ticksY
     color $ convertColour c

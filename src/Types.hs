@@ -12,14 +12,15 @@ data GraphData  = File String
                 | XY ([Float], [Float])
                 | XYZ ([Float], [Float], [Float])
 
-type AxisTitles = (String, String)
+type AxisLabels = [String]
 type GraphTitle = String
 
 data Graph = Graph {
-    gType :: GraphType,
-    gFunc :: RenderFunction,
-    gTitle :: GraphTitle,
-    gData :: [GraphData]
+    gType   :: GraphType,
+    gFunc   :: RenderFunction,
+    gTitle  :: GraphTitle,
+    gAxes   :: AxisLabels,
+    gData   :: [GraphData]
 }
 
 type RenderFunction = [(GLfloat, GLfloat, GLfloat)] -> GLfloat -> IO ()
@@ -27,14 +28,14 @@ type RenderFunction = [(GLfloat, GLfloat, GLfloat)] -> GLfloat -> IO ()
 data Colour = Red | Green | Blue | White | Grey | Black | Orange | Purple
 
 data Vis = Vis {
-    graph :: Graph,
+    graph   :: Graph,
     colours :: [Colour]
 }
 
 data ViewParams = ViewParams {
-    zoom :: GLfloat,            -- scale factor
-    rot :: (GLfloat, GLfloat),  -- angles to rotate by (y axis, x axis)
-    pan :: (GLfloat, GLfloat)   -- position to translate vis by
+    zoom    :: GLfloat,                     -- scale factor
+    rot     :: (GLfloat, GLfloat),          -- angles to rotate by (y axis, x axis)
+    pan     :: (GLfloat, GLfloat, GLfloat)  -- position to translate vis by
 }
 
 convertColour :: Colour -> Color4 GLfloat

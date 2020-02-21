@@ -37,7 +37,7 @@ main = do
 
             let visualisation = fitVisData $ replaceVisPaths inputVis graphData
             vis <- newIORef visualisation
-            viewParams <- newIORef (ViewParams 1 (-25, 35) (0, 0))
+            viewParams <- newIORef (ViewParams 1 (-25, 35) (0, 0, 0))
 
             initialDisplayMode $= [WithDepthBuffer, DoubleBuffered]
             _window <- createWindow "DataVis"
@@ -73,7 +73,7 @@ demoVis :: Vis
 demoVis = Vis demoGraph ([Types.Grey, Types.Orange :: Colour])
 
 demoGraph :: Graph
-demoGraph = Graph TwoD renderSquares "Demo" [(File "/home/jim/college/fyp/data2.csv")]
+demoGraph = Graph TwoD renderSquares "Demo" ["Population", "Time"] [(File "/home/jim/college/fyp/data2.csv")]
 
 -- defaultErrorBundle :: ParseErrorBundle e s
 defaultErrorBundle = ParseErrorBundle ((TrivialError 0 Nothing S.empty)NE.:|[]) (PosState "" 0 (SourcePos "" (mkPos 0) (mkPos 0)) (mkPos 0) "")

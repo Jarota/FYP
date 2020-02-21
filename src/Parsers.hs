@@ -51,6 +51,8 @@ pGraph = do
     gType <- pGraphType
     gFunc <- pRenderFunction gType
     void newline
+    gAxes <- pAxisLabels gType
+    void newline
     gData <- some (pGraphData gType)
     return Graph{..}
 
@@ -77,11 +79,28 @@ pRenderFunction ThreeD = do
         void (string "Line")
         return renderLine
 
-pTitle :: Parser GraphTitle
+pTitle :: Parser String
 pTitle = do
-    title <- some alphaNumChar
-
+    title <- some pStringChars
     return title
+
+pStringChars :: Parser Char
+pStringChars = alphaNumChar
+    <|> char ' '
+
+pAxisLabels :: GraphType -> Parser AxisLabels
+pAxisLabels TwoD = do
+    x <- pTitle
+    void (char ',')
+    y <- pTitle
+    return $ x:(y:[])
+pAxisLabels ThreeD = do
+    x <- pTitle
+    void (char ',')
+    y <- pTitle
+    void (char ',')
+    z <- pTitle
+    return $ x:(y:(z:[]))
 
 pGraphData :: GraphType -> Parser GraphData
 pGraphData TwoD = do
