@@ -50,6 +50,7 @@ render3D Graph{..} (c:cs) vp = do
     renderTitle gTitle
     rotateView degrees
     scale 0.7 0.7 (0.7 :: GLfloat)
+    axisLabels3D gAxes degrees
     axes3D
     renderTicks3D ticksX ticksY ticksZ
     render3D' gData' cs gFunc
@@ -88,6 +89,11 @@ zoomData vp (XYZ (xs, ys, zs)) = XYZ (xs', ys', zs')
         ys' = map (*z) ys
         zs' = map (*z) zs
 
+rotateView :: (GLfloat, GLfloat) -> IO ()
+rotateView (x, y) = do
+    rotate x $ Vector3 1 0 0
+    rotate y $ Vector3 0 1 0
+
 tickStepAndOffset :: [GLfloat] -> (GLfloat, GLfloat)
 tickStepAndOffset [] = (1, 1)
 tickStepAndOffset xs = (step, offset)
@@ -103,11 +109,6 @@ adjustOffset offset step    | offset >= 0.8 = offset
 minDifference :: (Num a, Ord a) => [a] -> a
 minDifference xs    | length xs == 1    = 1
                     | otherwise         = minimum $ map abs $ zipWith (-) xs (drop 1 xs)
-
-rotateView :: (GLfloat, GLfloat) -> IO ()
-rotateView (x, y) = do
-    rotate x $ Vector3 1 0 0
-    rotate y $ Vector3 0 1 0
 
 axisTicks2D :: [GraphData] -> ((GLfloat, GLfloat), (GLfloat, GLfloat))
 axisTicks2D gData = (minXs, minYs)

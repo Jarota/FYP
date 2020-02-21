@@ -37,7 +37,7 @@ main = do
 
             let visualisation = fitVisData $ replaceVisPaths inputVis graphData
             vis <- newIORef visualisation
-            viewParams <- newIORef (ViewParams 1 (-25, 35) (0, 0, 0))
+            viewParams <- newIORef (ViewParams 1 (-10, 55) (0, 0, 0))
 
             initialDisplayMode $= [WithDepthBuffer, DoubleBuffered]
             _window <- createWindow "DataVis"
