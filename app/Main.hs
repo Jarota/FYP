@@ -9,6 +9,7 @@ import Parsers
 import Rendering
 import Display
 import Bindings
+import Vis
 import Types
 
 import qualified Data.List.NonEmpty as NE
@@ -34,7 +35,7 @@ main = do
             let dataFiles' = map pack dataFiles
             let graphData = toGraphData (visType inputVis) dataFiles'
 
-            let visualisation = replaceVisPaths inputVis graphData
+            let visualisation = fitVisData $ replaceVisPaths inputVis graphData
             vis <- newIORef visualisation
             viewParams <- newIORef (ViewParams 1 (-25, 35) (0, 0))
 

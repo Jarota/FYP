@@ -16,77 +16,76 @@ renderGraph Graph{..} cs vp | gType == TwoD     = render2D Graph{..} cs vp
 {- 2D FUNCTIONS -}
 
 render2D :: Graph -> [Colour] -> ViewParams -> DisplayCallback
-render2D Graph{..} (c:cs) viewParams = do
+render2D Graph{..} (c:cs) vp = do
     renderTitle gTitle
     axes2D
-    color $ convertColour c
-    render2D' gData cs viewParams gFunc
-
-render2D' :: [GraphData] -> [Colour] -> ViewParams -> RenderFunction -> IO ()
-render2D' [] _ _ _                  = return ()
-render2D' (d:ds) (c:cs) vp dataFunc = do
-    renderData2D d c vp dataFunc
-    render2D' ds cs vp dataFunc
-
-renderData2D :: GraphData -> Colour -> ViewParams -> RenderFunction -> IO ()
-renderData2D (XY (xs, ys)) c vp dataFunc  = do
     renderTicks2D ticksX ticksY
     color $ convertColour c
-    dataFunc ps $ (minDifference xs') * 0.35
+    redoBackground bg2D
+    render2D' gData' cs gFunc
     where
-        z       = zoom vp
-        xs'     = fitData xs
-        xs''    = map (*z) xs'
-        ys'     = fitData ys
-        ys''    = map (*z) ys'
-        ps      = zip3 xs'' ys'' $ repeat (-0.8::GLfloat)
-        ticksX  = tickStepAndOffset xs''
-        ticksY  = tickStepAndOffset ys''
-renderData2D _ _ _ _ = return ()
+        gData'              = map (zoomData vp) gData
+        (ticksX, ticksY)    = axisTicks2D gData'
+
+render2D' :: [GraphData] -> [Colour] -> RenderFunction -> IO ()
+render2D' [] _ _                 = return ()
+render2D' (d:ds) (c:cs) dataFunc = do
+    renderData2D d c dataFunc
+    render2D' ds cs dataFunc
+
+renderData2D :: GraphData -> Colour -> RenderFunction -> IO ()
+renderData2D (XY (xs, ys)) c dataFunc = do
+    color $ convertColour c
+    dataFunc ps $ (minDifference xs) * 0.3
+    where
+        ps = zip3 xs ys $ repeat (0::GLfloat)
+renderData2D _ _ _ = return ()
 
 
 {- 3D FUNCTIONS -}
 
 render3D :: Graph -> [Colour] -> ViewParams -> DisplayCallback
-render3D Graph{..} (c:cs) viewParams = do
+render3D Graph{..} (c:cs) vp = do
     renderTitle gTitle
     rotateView degrees
     scale 0.7 0.7 (0.7 :: GLfloat)
-    render3D' gData cs viewParams gFunc
-    where
-        degrees = rot viewParams
-
-render3D' :: [GraphData] -> [Colour] -> ViewParams -> RenderFunction -> IO ()
-render3D' [] _ _ _                  = return ()
-render3D' (d:ds) (c:cs) vp dataFunc = do
-    renderData3D d c vp dataFunc
-    render3D' ds cs vp dataFunc
-
-renderData3D :: GraphData -> Colour -> ViewParams -> RenderFunction -> IO ()
-renderData3D (XYZ (xs, ys, zs)) c vp dataFunc  = do
-    color $ convertColour c
-    dataFunc ps $ (minDifference xs') * 0.3
     axes3D
     renderTicks3D ticksX ticksY ticksZ
+    render3D' gData' cs gFunc
     where
-        z       = zoom vp
-        xs'     = fitData xs
-        xs''    = map (*z) xs'
-        ys'     = map (*z) $ fitData ys
-        zs'     = map (*z) $ fitData zs
-        ps      = zip3 xs'' ys' zs'
-        ticksX  = tickStepAndOffset xs''
-        ticksY  = tickStepAndOffset ys'
-        ticksZ  = tickStepAndOffset zs'
-renderData3D _ _ _ _ = return ()
+        degrees = rot vp
+        gData'  = map (zoomData vp) gData
+        (ticksX, ticksY, ticksZ) = axisTicks3D gData'
+
+render3D' :: [GraphData] -> [Colour] -> RenderFunction -> IO ()
+render3D' [] _ _                 = return ()
+render3D' (d:ds) (c:cs) dataFunc = do
+    renderData3D d c dataFunc
+    render3D' ds cs dataFunc
+
+renderData3D :: GraphData -> Colour -> RenderFunction -> IO ()
+renderData3D (XYZ (xs, ys, zs)) c dataFunc = do
+    color $ convertColour c
+    dataFunc ps $ (minDifference xs) * 0.3
+    where
+        ps = zip3 xs ys zs
+renderData3D _ _ _ = return ()
+
 
 {- HELPER FUNCTIONS -}
 
-fitData :: [GLfloat] -> [GLfloat]
-fitData xs = map (\x -> -0.8 + (x * step)) xs
+zoomData :: ViewParams -> GraphData -> GraphData
+zoomData vp (XY (xs, ys)) = XY (xs', ys')
     where
-        range   = maximum xs
-        step    = 1.6 / range
+        z   = zoom vp
+        xs' = map (*z) xs
+        ys' = map (*z) ys
+zoomData vp (XYZ (xs, ys, zs)) = XYZ (xs', ys', zs')
+    where
+        z   = zoom vp
+        xs' = map (*z) xs
+        ys' = map (*z) ys
+        zs' = map (*z) zs
 
 tickStepAndOffset :: [GLfloat] -> (GLfloat, GLfloat)
 tickStepAndOffset [] = (1, 1)
@@ -108,3 +107,38 @@ rotateView :: (GLfloat, GLfloat) -> IO ()
 rotateView (x, y) = do
     rotate x $ Vector3 1 0 0
     rotate y $ Vector3 0 1 0
+
+axisTicks2D :: [GraphData] -> ((GLfloat, GLfloat), (GLfloat, GLfloat))
+axisTicks2D gData = (minXs, minYs)
+    where
+        xs      = map getXTicks gData
+        minXs   = smallestStep xs $ head xs
+        ys      = map getYTicks gData
+        minYs   = smallestStep ys $ head ys
+
+axisTicks3D :: [GraphData] -> ((GLfloat, GLfloat), (GLfloat, GLfloat), (GLfloat, GLfloat))
+axisTicks3D gData = (minXs, minYs, minZs)
+    where
+        xs      = map getXTicks gData
+        minXs   = smallestStep xs $ head xs
+        ys      = map getYTicks gData
+        minYs   = smallestStep ys $ head ys
+        zs      = map getZTicks gData
+        minZs   = smallestStep zs $ head zs
+
+getXTicks :: GraphData -> (GLfloat, GLfloat)
+getXTicks (XY (xs, _))      = tickStepAndOffset xs
+getXTicks (XYZ (xs, _, _))  = tickStepAndOffset xs
+
+getYTicks :: GraphData -> (GLfloat, GLfloat)
+getYTicks (XY (_, ys))      = tickStepAndOffset ys
+getYTicks (XYZ (_, ys, _))  = tickStepAndOffset ys
+
+getZTicks :: GraphData -> (GLfloat, GLfloat)
+getZTicks (XYZ (_, _, zs))  = tickStepAndOffset zs
+
+smallestStep :: [(GLfloat, GLfloat)] -> (GLfloat, GLfloat) -> (GLfloat, GLfloat)
+smallestStep [] ticks = ticks
+smallestStep ((s',o'):rest) (s,o)
+    | s' < s    = smallestStep rest (s',o')
+    | otherwise = smallestStep rest (s,o)
