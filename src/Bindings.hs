@@ -9,8 +9,22 @@ reshape :: ReshapeCallback
 reshape size = do
   viewport $= (Position 0 0, size)
 
-keyboardMouse :: IORef ViewParams -> KeyboardMouseCallback
-keyboardMouse vp key Down _ _ = case key of
+keyboardMouse :: IORef ViewParams -> IORef Position -> KeyboardMouseCallback
+keyboardMouse vp lastPos LeftButton Up _ curPos = do
+    writeIORef lastPos (Position (-1) (-1))
+keyboardMouse vp lastPos LeftButton Down _ curPos = do
+    lPos <- get lastPos
+    if lPos == (Position (-1) (-1)) then
+        writeIORef lastPos curPos
+    else do
+        let diff = getDiff lPos curPos
+        vp' <- get vp
+        let vp'' = panView vp' diff
+        writeIORef vp vp''
+
+
+
+keyboardMouse vp _ key Down _ _ = case key of
     (MouseButton WheelDown) -> vp $~! zoomOut
     (MouseButton WheelUp)   -> vp $~! zoomIn
     (SpecialKey KeyUp)      -> vp $~! rotUp
@@ -19,8 +33,11 @@ keyboardMouse vp key Down _ _ = case key of
     (SpecialKey KeyRight)   -> vp $~! rotRight
     (Char 'q')              -> leaveMainLoop
     _ -> return ()
+
 keyboardMouse _ _ _ _ _ = return ()
 
+
+{- Helper Functions -}
 
 zoomIn :: ViewParams -> ViewParams
 zoomIn vp = ViewParams z (rot vp) (pan vp)
@@ -49,3 +66,8 @@ rotLeft vp = let (x, y) = rot vp in
 rotRight :: ViewParams -> ViewParams
 rotRight vp = let (x, y) = rot vp in
     ViewParams (zoom vp) (x, y-5) (pan vp)
+
+getDiff :: Position -> Position -> Position
+getDiff (Position x1 y1) (Position x2 y2) = Position (x2-x1) (y2-y1)
+
+panView :: ViewParams -> Position -> ViewParams

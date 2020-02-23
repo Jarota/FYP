@@ -33,9 +33,9 @@ data Vis = Vis {
 }
 
 data ViewParams = ViewParams {
-    zoom    :: GLfloat,                     -- scale factor
-    rot     :: (GLfloat, GLfloat),          -- angles to rotate by (y axis, x axis)
-    pan     :: (GLfloat, GLfloat, GLfloat)  -- position to translate vis by
+    zoom    :: GLfloat,                 -- scale factor
+    rot     :: (GLfloat, GLfloat),      -- angles to rotate by (y axis, x axis)
+    pan     :: (GLint, GLint, GLint)    -- position to translate vis by (x, y, z)
 }
 
 convertColour :: Colour -> Color4 GLfloat
