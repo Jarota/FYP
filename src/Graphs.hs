@@ -16,17 +16,18 @@ renderGraph Graph{..} cs vp | gType == TwoD     = render2D Graph{..} cs vp
 {- 2D FUNCTIONS -}
 
 render2D :: Graph -> [Colour] -> ViewParams -> DisplayCallback
-render2D Graph{..} (c:cs) vp = do
+render2D Graph{..} (c:cs) ViewParams{..} = do
     renderTitle gTitle
     axisLabels2D gAxes
     axes2D
     renderTicks2D ticksX ticksY
     color $ convertColour c
     redoBackground bg2D
-    render2D' gData' cs gFunc
+    preservingMatrix $ do
+        sequence transformations
+        render2D' gData cs gFunc
     where
-        gData'              = map (zoomData vp) gData
-        (ticksX, ticksY)    = axisTicks2D gData'
+        (ticksX, ticksY)    = axisTicks2D gData
 
 render2D' :: [GraphData] -> [Colour] -> RenderFunction -> IO ()
 render2D' [] _ _                 = return ()
@@ -46,18 +47,19 @@ renderData2D _ _ _ = return ()
 {- 3D FUNCTIONS -}
 
 render3D :: Graph -> [Colour] -> ViewParams -> DisplayCallback
-render3D Graph{..} (c:cs) vp = do
+render3D Graph{..} (c:cs) ViewParams{..} = do
     renderTitle gTitle
-    rotateView degrees
     scale 0.7 0.7 (0.7 :: GLfloat)
-    axisLabels3D gAxes degrees
-    axes3D
-    renderTicks3D ticksX ticksY ticksZ
-    render3D' gData' cs gFunc
+    preservingMatrix $ do
+        sequence rotations
+        axisLabels3D gAxes rotations
+        axes3D
+        renderTicks3D ticksX ticksY ticksZ
+    preservingMatrix $ do
+        sequence transformations
+        render3D' gData cs gFunc
     where
-        degrees = rot vp
-        gData'  = map (zoomData vp) gData
-        (ticksX, ticksY, ticksZ) = axisTicks3D gData'
+        (ticksX, ticksY, ticksZ) = axisTicks3D gData
 
 render3D' :: [GraphData] -> [Colour] -> RenderFunction -> IO ()
 render3D' [] _ _                 = return ()
@@ -75,24 +77,6 @@ renderData3D _ _ _ = return ()
 
 
 {- HELPER FUNCTIONS -}
-
-zoomData :: ViewParams -> GraphData -> GraphData
-zoomData vp (XY (xs, ys)) = XY (xs', ys')
-    where
-        z   = zoom vp
-        xs' = map (*z) xs
-        ys' = map (*z) ys
-zoomData vp (XYZ (xs, ys, zs)) = XYZ (xs', ys', zs')
-    where
-        z   = zoom vp
-        xs' = map (*z) xs
-        ys' = map (*z) ys
-        zs' = map (*z) zs
-
-rotateView :: (GLfloat, GLfloat) -> IO ()
-rotateView (x, y) = do
-    rotate x $ Vector3 1 0 0
-    rotate y $ Vector3 0 1 0
 
 tickStepAndOffset :: [GLfloat] -> (GLfloat, GLfloat)
 tickStepAndOffset [] = (1, 1)

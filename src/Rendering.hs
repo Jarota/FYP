@@ -76,52 +76,6 @@ renderTitle title = preservingMatrix $ do
     translate $ Vector3 (-offset) 850 (0::GLfloat)
     renderString Roman title
 
-axisLabels2D :: AxisLabels -> IO ()
-axisLabels2D (y:(x:_)) = preservingMatrix $ do
-    color $ convertColour Types.White
-    scale 0.0005 0.0005 (0.0005::GLfloat)
-    preservingMatrix $ do
-        widthY <- stringWidth Roman y
-        let offsetY = (fromIntegral widthY)/2
-        rotate 90 $ Vector3 0 0 (1::GLfloat)
-        translate $ Vector3 (-offsetY) (1800) (0::GLfloat)
-        renderString Roman y
-    preservingMatrix $ do
-        widthX <- stringWidth Roman x
-        let offsetX = (fromIntegral widthX)/2
-        translate $ Vector3 (-offsetX) (-1800) (0::GLfloat)
-        renderString Roman x
-
-axisLabels3D :: AxisLabels -> (GLfloat, GLfloat) -> IO ()
-axisLabels3D (z:(y:(x:_))) (xDeg, yDeg) = preservingMatrix $ do
-    color $ convertColour Types.White
-    scale 0.0005 0.0005 (0.0005::GLfloat)
-    preservingMatrix $ do
-        widthY <- stringWidth Roman y
-        let offsetY = (fromIntegral widthY)/2
-        translate $ Vector3 (-1850) 0 (-1850::GLfloat)
-        preservingMatrix $ do
-            rotate (-yDeg) $ Vector3 0 1 0
-            rotate (-xDeg) $ Vector3 1 0 0
-            rotate 90 $ Vector3 0 0 (1::GLfloat)
-            translate $ Vector3 (-offsetY) 0 (0::GLfloat)
-            renderString Roman y
-    preservingMatrix $ do
-        widthX <- stringWidth Roman x
-        let offsetX = (fromIntegral widthX)/2
-        translate $ Vector3 (-offsetX) (-1850) (-1850::GLfloat)
-        rotate (-yDeg) $ Vector3 0 1 0
-        rotate (-xDeg) $ Vector3 1 0 0
-        renderString Roman x
-    preservingMatrix $ do
-        widthZ <- stringWidth Roman z
-        let offsetZ = (fromIntegral widthZ)/2
-        translate $ Vector3 (-offsetZ-1850) (-1850) (0::GLfloat)
-        rotate (-yDeg) $ Vector3 0 1 0
-        rotate (-xDeg) $ Vector3 1 0 0
-        renderString Roman z
-
-
 pointToCube :: GLfloat -> (GLfloat, GLfloat, GLfloat) -> [(GLfloat, GLfloat, GLfloat)]
 pointToCube l (x, y, z) = [
         -- front face

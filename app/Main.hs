@@ -37,13 +37,18 @@ main = do
 
             let visualisation = fitVisData $ replaceVisPaths inputVis graphData
             vis <- newIORef visualisation
-            viewParams <- newIORef (ViewParams 1 (-10, 55) (0, 0, 0))
+            viewParams <- newIORef (ViewParams [] [] False False)
 
             initialDisplayMode $= [WithDepthBuffer, DoubleBuffered]
             _window <- createWindow "DataVis"
             reshapeCallback $= Just reshape
             depthFunc $= Just Less
-            keyboardMouseCallback $= Just (keyboardMouse viewParams)
+
+            p <- newIORef initPos
+            keyboardMouseCallback $= Just ( keyboardMouse (visType visualisation) viewParams)
+            motionCallback $= Just ( mouseMotion viewParams p)
+            passiveMotionCallback $= Just ( passiveMouseMotion p)
+
             idleCallback $= Just (idle viewParams)
             displayCallback $= display vis viewParams
             mainLoop
@@ -68,6 +73,8 @@ toGraphData ThreeD dataFiles = graphData
         res = rights parsedData
         graphData = map XYZ $ map unzip3 res
 
+initPos :: Position
+initPos = Position (-1) (-1)
 
 demoVis :: Vis
 demoVis = Vis demoGraph ([Types.Grey, Types.Orange :: Colour])
