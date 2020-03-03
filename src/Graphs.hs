@@ -52,9 +52,9 @@ render3D Graph{..} (c:cs) ViewParams{..} = do
     scale 0.7 0.7 (0.7 :: GLfloat)
     preservingMatrix $ do
         sequence rotations
-        axisLabels3D gAxes rotations
+        -- axisLabels3D gAxes rotations
         axes3D
-        renderTicks3D ticksX ticksY ticksZ
+        -- renderTicks3D ticksX ticksY ticksZ
     preservingMatrix $ do
         sequence transformations
         render3D' gData cs gFunc
