@@ -120,15 +120,13 @@ arbitraryRotation zAngle xAngle = [
     ]
 
 angleToPrimaryAxis :: GLdouble -> GLdouble -> GLdouble -> GLdouble
-angleToPrimaryAxis 0 y _ | y < 0     = 0
-                         | otherwise = 180
-angleToPrimaryAxis x 0 _ | x < 0     = 270
-                         | otherwise = 90
 angleToPrimaryAxis x y h
-    | x > 0 = 90 + angle
-    | x < 0 = 270 - angle
+    | x >= 0    = 270 + angle
+    | x < 0     = 90 - angle
     where
-        angle = asin ( y / h )
+        angle = toDegrees $ asin ( y / h )
+
+toDegrees x = x * (180/pi)
 
 screenToWorld :: Position -> Size -> (GLdouble, GLdouble)
 screenToWorld (Position x y) (Size w h) = (x'-1, y'-1)
