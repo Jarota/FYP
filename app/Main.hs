@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, RecordWildCards, NamedFieldPuns #-}
+{-# LANGUAGE OverloadedStrings, RecordWildCards #-}
 
 module Main where
 
@@ -26,7 +26,7 @@ main = do
     if isLeft vis
         then do
             let errors = fromLeft defaultErrorBundle vis
-            print (errorBundlePretty errors)
+            putStrLn (errorBundlePretty errors)
         else do
             let inputVis = fromRight demoVis vis
             let paths = getVisPaths inputVis
@@ -37,7 +37,7 @@ main = do
 
             let visualisation = fitVisData $ replaceVisPaths inputVis graphData
             vis <- newIORef visualisation
-            viewParams <- newIORef (ViewParams [] [] False False)
+            viewParams <- newIORef (ViewParams [] 1.0 False False)
 
             initialDisplayMode $= [WithDepthBuffer, DoubleBuffered]
             _window <- createWindow "DataVis"
@@ -80,7 +80,10 @@ demoVis :: Vis
 demoVis = Vis demoGraph ([Types.Grey, Types.Orange :: Colour])
 
 demoGraph :: Graph
-demoGraph = Graph TwoD renderSquares "Demo" ["Population", "Time"] [(File "/home/jim/college/fyp/data2.csv")]
+demoGraph = Graph TwoD renderSquares "Demo" ["Population", "Time"] [(XY (xs, ys))]
+    where
+        xs = Prelude.take 15 [1..]
+        ys = Prelude.take 15 [1..]
 
 -- defaultErrorBundle :: ParseErrorBundle e s
 defaultErrorBundle = ParseErrorBundle ((TrivialError 0 Nothing S.empty)NE.:|[]) (PosState "" 0 (SourcePos "" (mkPos 0) (mkPos 0)) (mkPos 0) "")

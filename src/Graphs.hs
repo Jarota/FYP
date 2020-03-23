@@ -18,16 +18,28 @@ renderGraph Graph{..} cs vp | gType == TwoD     = render2D Graph{..} cs vp
 render2D :: Graph -> [Colour] -> ViewParams -> DisplayCallback
 render2D Graph{..} (c:cs) ViewParams{..} = do
     renderTitle gTitle
-    axisLabels2D gAxes
-    axes2D
-    renderTicks2D ticksX ticksY
     color $ convertColour c
     redoBackground bg2D
+    
     preservingMatrix $ do
+        -- Pan, Zoom, and render data
         sequence transformations
-        render2D' gData cs gFunc
-    where
-        (ticksX, ticksY)    = axisTicks2D gData
+        let gData' = map (zoomData zoom) gData
+        render2D' gData' cs gFunc
+        
+        -- retrieve resulting modelview matrix for proper axis tick offsets
+        let modelView = matrix $ Just $ Modelview 0 :: StateVar (GLmatrix GLfloat)
+        m <- get modelView
+        ts <- getMatrixComponents ColumnMajor m
+        let (ticksX, ticksY) = axisTicks2D gData' (ts!!12, ts!!13, ts!!14)
+
+        -- render the axes, ticks, and labels
+        preservingMatrix $ do
+            loadIdentity
+            axes2D
+            renderTicks2D ticksX ticksY
+            axisLabels2D gAxes
+
 
 render2D' :: [GraphData] -> [Colour] -> RenderFunction -> IO ()
 render2D' [] _ _                 = return ()
@@ -51,15 +63,13 @@ render3D Graph{..} (c:cs) ViewParams{..} = do
     renderTitle gTitle
     scale 0.7 0.7 (0.7 :: GLfloat)
     preservingMatrix $ do
-        sequence rotations
-        -- axisLabels3D gAxes rotations
-        axes3D
-        -- renderTicks3D ticksX ticksY ticksZ
-    preservingMatrix $ do
         sequence transformations
-        render3D' gData cs gFunc
+        render3D' gData' cs gFunc
+        axes3D
+        renderTicks3D ticksX ticksY ticksZ
     where
-        (ticksX, ticksY, ticksZ) = axisTicks3D gData
+        gData' = map (zoomData zoom) gData
+        (ticksX, ticksY, ticksZ) = axisTicks3D gData'
 
 render3D' :: [GraphData] -> [Colour] -> RenderFunction -> IO ()
 render3D' [] _ _                 = return ()
@@ -78,13 +88,13 @@ renderData3D _ _ _ = return ()
 
 {- HELPER FUNCTIONS -}
 
-tickStepAndOffset :: [GLfloat] -> (GLfloat, GLfloat)
-tickStepAndOffset [] = (1, 1)
-tickStepAndOffset xs = (step, offset)
+tickStepAndOffset :: [GLfloat] -> GLfloat -> (GLfloat, GLfloat)
+tickStepAndOffset [] _ = (1, 1)
+tickStepAndOffset xs t = (step, offset)
     where
         step    = minDifference xs
         minX    = abs $ minimum xs
-        offset  = adjustOffset minX step
+        offset  = adjustOffset (minX-t) step
 
 adjustOffset :: GLfloat -> GLfloat -> GLfloat
 adjustOffset offset step    | offset >= 0.8 = offset
@@ -94,37 +104,51 @@ minDifference :: (Num a, Ord a) => [a] -> a
 minDifference xs    | length xs == 1    = 1
                     | otherwise         = minimum $ map abs $ zipWith (-) xs (drop 1 xs)
 
-axisTicks2D :: [GraphData] -> ((GLfloat, GLfloat), (GLfloat, GLfloat))
-axisTicks2D gData = (minXs, minYs)
+axisTicks2D :: [GraphData] -> (GLfloat, GLfloat, GLfloat) -> ((GLfloat, GLfloat), (GLfloat, GLfloat))
+axisTicks2D gData (x, y, z) = (minXs, minYs)
     where
-        xs      = map getXTicks gData
+        xs      = map (getXTicks x) gData
         minXs   = smallestStep xs $ head xs
-        ys      = map getYTicks gData
+        ys      = map (getYTicks y) gData
         minYs   = smallestStep ys $ head ys
 
 axisTicks3D :: [GraphData] -> ((GLfloat, GLfloat), (GLfloat, GLfloat), (GLfloat, GLfloat))
 axisTicks3D gData = (minXs, minYs, minZs)
     where
-        xs      = map getXTicks gData
+        xs      = map (getXTicks 0) gData
         minXs   = smallestStep xs $ head xs
-        ys      = map getYTicks gData
+        ys      = map (getYTicks 0) gData
         minYs   = smallestStep ys $ head ys
-        zs      = map getZTicks gData
+        zs      = map (getZTicks 0) gData
         minZs   = smallestStep zs $ head zs
 
-getXTicks :: GraphData -> (GLfloat, GLfloat)
-getXTicks (XY (xs, _))      = tickStepAndOffset xs
-getXTicks (XYZ (xs, _, _))  = tickStepAndOffset xs
+getXTicks :: GLfloat -> GraphData -> (GLfloat, GLfloat)
+getXTicks t (XY (xs, _))      = tickStepAndOffset xs t
+getXTicks t (XYZ (xs, _, _))  = tickStepAndOffset xs t
 
-getYTicks :: GraphData -> (GLfloat, GLfloat)
-getYTicks (XY (_, ys))      = tickStepAndOffset ys
-getYTicks (XYZ (_, ys, _))  = tickStepAndOffset ys
+getYTicks :: GLfloat -> GraphData -> (GLfloat, GLfloat)
+getYTicks t (XY (_, ys))      = tickStepAndOffset ys t
+getYTicks t (XYZ (_, ys, _))  = tickStepAndOffset ys t
 
-getZTicks :: GraphData -> (GLfloat, GLfloat)
-getZTicks (XYZ (_, _, zs))  = tickStepAndOffset zs
+getZTicks :: GLfloat -> GraphData -> (GLfloat, GLfloat)
+getZTicks t (XYZ (_, _, zs))  = tickStepAndOffset zs t
 
 smallestStep :: [(GLfloat, GLfloat)] -> (GLfloat, GLfloat) -> (GLfloat, GLfloat)
 smallestStep [] ticks = ticks
 smallestStep ((s',o'):rest) (s,o)
     | s' < s    = smallestStep rest (s',o')
     | otherwise = smallestStep rest (s,o)
+
+zoomData :: GLfloat -> GraphData -> GraphData
+zoomData z (XY (xs, ys)) = XY (xs', ys')
+    where
+        xs' = map (*z) xs
+        ys' = map (*z) ys
+
+zoomData z (XYZ (xs, ys, zs)) = XYZ (xs', ys', zs')
+    where
+        xs' = map (*z) xs
+        ys' = map (*z) ys
+        zs' = map (*z) zs
+
+zoomData _ _ = File " "

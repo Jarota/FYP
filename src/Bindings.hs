@@ -16,7 +16,6 @@ keyboardMouse ThreeD    = threeDControls
 
 threeDControls :: IORef ViewParams -> KeyboardMouseCallback
 threeDControls vp key Down _ _ = case key of
-    (MouseButton RightButton)   -> vp $~! panning
     (MouseButton LeftButton)    -> vp $~! rotating
     (MouseButton WheelDown)     -> vp $~! zoomOut
     (MouseButton WheelUp)       -> vp $~! zoomIn
@@ -25,7 +24,6 @@ threeDControls vp key Down _ _ = case key of
     _ -> return ()
 
 threeDControls vp key Up _ _ = case key of
-    (MouseButton RightButton)   -> vp $~! notPanning
     (MouseButton LeftButton)    -> vp $~! notRotating
     _ -> return ()
 
@@ -33,14 +31,14 @@ threeDControls vp key Up _ _ = case key of
 {- Zooming and Panning Controls and Quit -}
 twoDControls :: IORef ViewParams -> KeyboardMouseCallback
 twoDControls vp key Down _ _ = case key of
-    (MouseButton RightButton)    -> vp $~! panning
+    (MouseButton LeftButton)    -> vp $~! panning
     (MouseButton WheelDown)     -> vp $~! zoomOut
     (MouseButton WheelUp)       -> vp $~! zoomIn
     (Char 'q')                  -> leaveMainLoop
     _ -> return ()
 
 twoDControls vp key Up _ _ = case key of
-    (MouseButton RightButton)    -> vp $~! notPanning
+    (MouseButton LeftButton)    -> vp $~! notPanning
     _ -> return ()
 
 
@@ -69,29 +67,27 @@ passiveMouseMotion lastPos curPos = writeIORef lastPos curPos
 
 {- Helper Functions -}
 rotating :: ViewParams -> ViewParams
-rotating (ViewParams rs ts _ p) = ViewParams rs ts True p
+rotating (ViewParams ts z _ p) = ViewParams ts z True p
 
 notRotating :: ViewParams -> ViewParams
-notRotating (ViewParams rs ts _ p) = ViewParams rs ts False p
+notRotating (ViewParams ts z _ p) = ViewParams ts z False p
 
 panning :: ViewParams -> ViewParams
-panning (ViewParams rs ts r _) = ViewParams rs ts r True
+panning (ViewParams ts z r _) = ViewParams ts z r True
 
 notPanning :: ViewParams -> ViewParams
-notPanning (ViewParams rs ts r _) = ViewParams rs ts r False
+notPanning (ViewParams ts z r _) = ViewParams ts z r False
 
 zoomIn :: ViewParams -> ViewParams
-zoomIn (ViewParams rs ts r p) = ViewParams rs (t:ts) r p
-    where
-        t = scale 1.1 1.1 (1.1 :: GLfloat)
+zoomIn (ViewParams ts z r p) = ViewParams ts (z+0.05) r p
 
 zoomOut :: ViewParams -> ViewParams
-zoomOut (ViewParams rs ts r p) = ViewParams rs (t:ts) r p
-    where
-        t = scale 0.9 0.9 (0.9 :: GLfloat)
+zoomOut (ViewParams ts z r p)
+    | z <= 0    = ViewParams ts z r p
+    | otherwise = ViewParams ts (z-0.05) r p
 
 panView :: ViewParams -> Position -> Position -> Size -> ViewParams
-panView (ViewParams rs ts r p) pos1 pos2 size = ViewParams rs (t:ts) r p
+panView (ViewParams ts z r p) pos1 pos2 size = ViewParams (t:ts) z r p
     where
         (x1, y1) = screenToWorld pos1 size
         (x2, y2) = screenToWorld pos2 size
@@ -99,9 +95,9 @@ panView (ViewParams rs ts r p) pos1 pos2 size = ViewParams rs (t:ts) r p
         t        = translate $ Vector3 x (-y) (0::GLdouble)
 
 rotView :: ViewParams -> Position -> Position -> Size -> ViewParams
-rotView (ViewParams rs ts r p) pos1 pos2 size
-    | pos1 == pos2  = ViewParams rs ts r p
-    | otherwise     = ViewParams (t++rs) (t++ts) r p
+rotView (ViewParams ts z r p) pos1 pos2 size
+    | pos1 == pos2  = ViewParams ts z r p
+    | otherwise     = ViewParams (t++ts) z r p
     where
         (x1, y1)    = screenToWorld pos1 size
         (x2, y2)    = screenToWorld pos2 size

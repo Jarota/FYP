@@ -9,6 +9,8 @@ import Vis
 
 display :: IORef Vis-> IORef ViewParams -> DisplayCallback
 display visRef vpRef = do
+    clear [ColorBuffer, DepthBuffer]
+    
     vis <- get visRef
     viewParams <- get vpRef
 

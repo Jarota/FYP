@@ -33,8 +33,8 @@ data Vis = Vis {
 }
 
 data ViewParams = ViewParams {
-    rotations :: [IO ()],       -- Transformations for axes only
-    transformations :: [IO ()],  -- Transformations for all data
+    transformations :: [IO ()],
+    zoom :: GLfloat,
     rot :: Bool,
     pan :: Bool
 }

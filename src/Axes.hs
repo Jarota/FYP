@@ -22,26 +22,28 @@ axes3D = do
 
 
 renderTicks2D :: (GLfloat, GLfloat) -> (GLfloat, GLfloat) -> IO ()
-renderTicks2D (stepX, offX) (stepY, offY)   | stepX <= 0.01 || stepY <= 0.01 = return ()
-                                            | otherwise = do
-                                                color $ convertColour Types.White
-                                                renderLines xs
-                                                renderLines ys
-                                                where
-                                                    xs = generateTicks pointToTickX offX stepX
-                                                    ys = generateTicks pointToTickY offY stepY
+renderTicks2D (stepX, offX) (stepY, offY)
+    | stepX <= 0.01 || stepY <= 0.01 = return ()
+    | otherwise = do
+        color $ convertColour Types.White
+        renderLines xs
+        renderLines ys
+        where
+            xs = generateTicks pointToTickX offX stepX
+            ys = generateTicks pointToTickY offY stepY
 
 renderTicks3D :: (GLfloat, GLfloat) -> (GLfloat, GLfloat) -> (GLfloat, GLfloat) -> IO ()
-renderTicks3D (stepX, offX) (stepY, offY) (stepZ, offZ) | stepX <= 0.01 || stepY <= 0.01 || stepZ <= 0.01 = return ()
-                                                        | otherwise = do
-                                                            color $ convertColour Types.White
-                                                            renderLines xs
-                                                            renderLines ys
-                                                            renderLines zs
-                                                            where
-                                                                xs = generateTicks pointToTickX offX stepX
-                                                                ys = generateTicks pointToTickY offY stepY
-                                                                zs = generateTicks pointToTickZ offZ stepZ
+renderTicks3D (stepX, offX) (stepY, offY) (stepZ, offZ)
+    | stepX <= 0.01 || stepY <= 0.01 || stepZ <= 0.01 = return ()
+    | otherwise = do
+        color $ convertColour Types.White
+        renderLines xs
+        renderLines ys
+        renderLines zs
+        where
+            xs = generateTicks pointToTickX offX stepX
+            ys = generateTicks pointToTickY offY stepY
+            zs = generateTicks pointToTickZ offZ stepZ
 
 
 generateTicks :: ( GLfloat -> GLfloat -> [(GLfloat, GLfloat, GLfloat)] ) -> GLfloat -> GLfloat -> [(GLfloat, GLfloat, GLfloat)]
