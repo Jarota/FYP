@@ -19,6 +19,9 @@ threeDControls vp key Down _ _ = case key of
     (MouseButton LeftButton)    -> vp $~! rotating
     (MouseButton WheelDown)     -> vp $~! zoomOut
     (MouseButton WheelUp)       -> vp $~! zoomIn
+    (Char 'x')                  -> vp $~! viewAlongX
+    (Char 'y')                  -> vp $~! viewAlongY
+    (Char 'z')                  -> vp $~! viewAlongZ
     (Char 'q')                  -> leaveMainLoop
 
     _ -> return ()
@@ -83,8 +86,10 @@ zoomIn (ViewParams ts z r p) = ViewParams ts (z+0.05) r p
 
 zoomOut :: ViewParams -> ViewParams
 zoomOut (ViewParams ts z r p)
-    | z <= 0    = ViewParams ts z r p
-    | otherwise = ViewParams ts (z-0.05) r p
+    | z' <= 0   = ViewParams ts z r p
+    | otherwise = ViewParams ts z' r p
+    where
+        z' = (z-0.05)
 
 panView :: ViewParams -> Position -> Position -> Size -> ViewParams
 panView (ViewParams ts z r p) pos1 pos2 size = ViewParams (t:ts) z r p
@@ -105,7 +110,7 @@ rotView (ViewParams ts z r p) pos1 pos2 size
         y           = y2-y1
         h           = sqrt $ (x^2) + (y^2)
         zAngle      = angleToPrimaryAxis x y h
-        xAngle      = h * 90
+        xAngle      = h * (-90)
         t           = arbitraryRotation zAngle xAngle
 
 arbitraryRotation :: GLdouble -> GLdouble -> [IO ()]
@@ -129,3 +134,12 @@ screenToWorld (Position x y) (Size w h) = (x'-1, y'-1)
     where
         x' = ((fromIntegral x) / (fromIntegral w))*2
         y' = ((fromIntegral y) / (fromIntegral h))*2
+
+viewAlongX :: ViewParams -> ViewParams
+viewAlongX (ViewParams _ z r p) = ViewParams [(rotate (90::GLfloat) $ Vector3 0 1 0)] z r p
+
+viewAlongY :: ViewParams -> ViewParams
+viewAlongY (ViewParams _ z r p) = ViewParams [(rotate (90::GLfloat) $ Vector3 0 0 1), (rotate (90::GLfloat) $ Vector3 1 0 0)] z r p
+
+viewAlongZ :: ViewParams -> ViewParams
+viewAlongZ (ViewParams _ z r p) = ViewParams [] z r p

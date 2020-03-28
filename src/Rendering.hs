@@ -30,13 +30,21 @@ pointToSquare l (x, y, z) = [
 
 renderCubes :: [(GLfloat, GLfloat, GLfloat)] -> GLfloat -> IO ()
 renderCubes [] _        = return ()
-renderCubes ps width    = do
+renderCubes points width    = do
     renderPrimitive Quads $ mapM_ vertex3f ps'
     color $ convertColour Types.White
     renderPrimitive Lines $ mapM_ vertex3f ps''
     where
+        ps  = filter inBounds points
         ps' = concatMap (pointToCube width) ps
-        ps'' = concatMap (pointToCubeFrame width) ps
+        -- extra width to avoid 'z-fighting'
+        ps'' = concatMap (pointToCubeFrame (width+0.003)) ps
+
+inBounds :: (GLfloat, GLfloat, GLfloat) -> Bool
+inBounds (x, y, z) = inRange x && inRange y && inRange z
+    
+inRange :: GLfloat -> Bool
+inRange x = x >= -0.8 && x <= 0.8
 
 renderBars :: [(GLfloat, GLfloat, GLfloat)] -> GLfloat -> IO ()
 renderBars [] _     = return ()

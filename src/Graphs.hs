@@ -61,12 +61,21 @@ renderData2D _ _ _ = return ()
 render3D :: Graph -> [Colour] -> ViewParams -> DisplayCallback
 render3D Graph{..} (c:cs) ViewParams{..} = do
     renderTitle gTitle
+
+    -- scale to accommodate for 3D
     scale 0.7 0.7 (0.7 :: GLfloat)
     preservingMatrix $ do
+        -- rotate, zoom, and render data, axes, and ticks
         sequence transformations
         render3D' gData' cs gFunc
         axes3D
         renderTicks3D ticksX ticksY ticksZ
+
+        -- get modelview matrix to pass to axis label function
+        -- let modelView = matrix $ Just $ Modelview 0 :: StateVar (GLmatrix GLfloat)
+        -- m <- get modelView
+        -- m' <- getMatrixComponents ColumnMajor m
+        -- axisLabels3D gAxes m'
     where
         gData' = map (zoomData zoom) gData
         (ticksX, ticksY, ticksZ) = axisTicks3D gData'
@@ -136,8 +145,8 @@ getZTicks t (XYZ (_, _, zs))  = tickStepAndOffset zs t
 smallestStep :: [(GLfloat, GLfloat)] -> (GLfloat, GLfloat) -> (GLfloat, GLfloat)
 smallestStep [] ticks = ticks
 smallestStep ((s',o'):rest) (s,o)
-    | s' < s    = smallestStep rest (s',o')
-    | otherwise = smallestStep rest (s,o)
+    | s' < s && s' > 0  = smallestStep rest (s',o')
+    | otherwise         = smallestStep rest (s,o)
 
 zoomData :: GLfloat -> GraphData -> GraphData
 zoomData z (XY (xs, ys)) = XY (xs', ys')

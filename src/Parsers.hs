@@ -165,6 +165,7 @@ pPathComponent = do
     xs      <- many alphaNumChar
     return $ [slash] ++ [x] ++ xs
 
+
 {- Data File Parsers -}
 
 pCSV2 :: Parser [(Float,Float)]

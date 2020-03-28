@@ -9,6 +9,10 @@ import Vis
 
 display :: IORef Vis-> IORef ViewParams -> DisplayCallback
 display visRef vpRef = do
+    lineSmooth $= Enabled
+    pointSmooth $= Enabled
+    polygonSmooth $= Enabled
+
     clear [ColorBuffer, DepthBuffer]
     
     vis <- get visRef
@@ -16,6 +20,8 @@ display visRef vpRef = do
 
     loadIdentity
     renderVis vis viewParams
+
+    flush
     swapBuffers
 
 idle :: IORef ViewParams -> IdleCallback

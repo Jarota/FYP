@@ -40,6 +40,7 @@ main = do
             viewParams <- newIORef (ViewParams [] 1.0 False False)
 
             initialDisplayMode $= [WithDepthBuffer, DoubleBuffered]
+            initialWindowSize $= Size 800 800
             _window <- createWindow "DataVis"
             reshapeCallback $= Just reshape
             depthFunc $= Just Less
@@ -77,13 +78,13 @@ initPos :: Position
 initPos = Position (-1) (-1)
 
 demoVis :: Vis
-demoVis = Vis demoGraph ([Types.Grey, Types.Orange :: Colour])
+demoVis = Vis demoGraph3D ([Types.Grey, Types.Orange :: Colour])
 
-demoGraph :: Graph
-demoGraph = Graph TwoD renderSquares "Demo" ["Population", "Time"] [(XY (xs, ys))]
-    where
-        xs = Prelude.take 15 [1..]
-        ys = Prelude.take 15 [1..]
+demoGraph2D :: Graph
+demoGraph2D = Graph TwoD renderSquares "Demo" ["Population", "Time"] [File "/home/jim/college/fyp/data2.csv"]
+
+demoGraph3D :: Graph
+demoGraph3D = Graph ThreeD renderCubes "Demo" ["Population", "Time", "GDP"] [File "/home/jim/college/fyp/data31.csv"]
 
 -- defaultErrorBundle :: ParseErrorBundle e s
 defaultErrorBundle = ParseErrorBundle ((TrivialError 0 Nothing S.empty)NE.:|[]) (PosState "" 0 (SourcePos "" (mkPos 0) (mkPos 0)) (mkPos 0) "")
