@@ -4,26 +4,24 @@ import Graphics.UI.GLUT
 import Control.Monad
 import Data.IORef
 
-import Types
-import Vis
+import Graph
+import Visualisation
 
-display :: IORef Vis-> IORef ViewParams -> DisplayCallback
-display visRef vpRef = do
+display :: Graph a => IORef (Visualisation a) -> DisplayCallback
+display visRef = do
     lineSmooth $= Enabled
     pointSmooth $= Enabled
     polygonSmooth $= Enabled
-
+    clearColor $= Color4 0.6 0.6 0.6 1
     clear [ColorBuffer, DepthBuffer]
-    
-    vis <- get visRef
-    viewParams <- get vpRef
 
+    vis <- get visRef
     loadIdentity
-    renderVis vis viewParams
+    renderVis vis
 
     flush
     swapBuffers
 
-idle :: IORef ViewParams -> IdleCallback
-idle viewParams = do
+idle :: IdleCallback
+idle = do
     postRedisplay Nothing

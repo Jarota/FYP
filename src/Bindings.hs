@@ -3,15 +3,15 @@ module Bindings (reshape, keyboardMouse, mouseMotion, passiveMouseMotion) where
 import Graphics.UI.GLUT hiding (TwoD, ThreeD)
 import Data.IORef
 import Display
-import Types
+import ViewParams
 
 reshape :: ReshapeCallback
 reshape size = do
   viewport $= (Position 0 0, size)
 
-keyboardMouse :: GraphType -> IORef ViewParams -> KeyboardMouseCallback
-keyboardMouse TwoD      = twoDControls
-keyboardMouse ThreeD    = threeDControls
+keyboardMouse :: Int -> IORef ViewParams -> KeyboardMouseCallback
+keyboardMouse dims  | dims > 2  = threeDControls
+                    | otherwise = twoDControls
 
 
 threeDControls :: IORef ViewParams -> KeyboardMouseCallback

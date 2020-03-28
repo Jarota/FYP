@@ -8,6 +8,7 @@ import Data.IORef
 import Types
 import Rendering
 import Axes
+import AxisTicks
 
 renderGraph :: Graph -> [Colour] -> ViewParams -> DisplayCallback
 renderGraph Graph{..} cs vp | gType == TwoD     = render2D Graph{..} cs vp
@@ -38,7 +39,7 @@ render2D Graph{..} (c:cs) ViewParams{..} = do
             loadIdentity
             axes2D
             renderTicks2D ticksX ticksY
-            axisLabels2D gAxes
+            --axisLabels2D gAxes
 
 
 render2D' :: [GraphData] -> [Colour] -> RenderFunction -> IO ()
