@@ -12,76 +12,75 @@ import Data.Void
 import Data.Text hiding (map, head)
 import Text.Megaparsec
 
-{- OLD -}
 import Parsers
--- import Types
-
-{- NEW -}
-import DataSet
-import GraphData
-import ViewParams
 import Visualisation
+import ViewParams
 import Graph
-import Scatter2D -- for demo graph
-import Rendering
+import DataSet
 import Bindings
 import Display
 
 main :: IO ()
 main = do
     (_progName, _args) <- getArgsAndInitialize
-    -- vis <- parseInput _args -- returns demo vis if _args is empty
-    -- if isLeft vis
-    --     then do
-    --         let errors = fromLeft defaultErrorBundle vis
-    --         putStrLn (errorBundlePretty errors)
-    --     else do
-    --         let inputVis = fromRight demoVis vis
-            
+    
+    -- Parse the DSL program
+    
+    vis <- parseInput _args -- returns demo vis if _args is empty
+    if isLeft vis
+        then do
+            let errors = fromLeft defaultErrorBundle vis
+            putStrLn (errorBundlePretty errors)
+        else do
+            let inputVis = fromRight demoVis vis
             {- 
                 TODO redo the parsing of csv files 
                 OR parse them as they come in Parser.hs?
             -}
-            
-    let visualisation = demoVis
-    visRef <- newIORef visualisation
-    viewParamsRef <- newIORef initViewParams
+            let visualisation = formatVis inputVis
 
-    initialDisplayMode $= [WithDepthBuffer, DoubleBuffered]
-    initialWindowSize $= Size 800 800
-    _window <- createWindow "DataVis"
-    reshapeCallback $= Just reshape
-    depthFunc $= Just Less
+            writeFile "log.txt" $ show visualisation
 
-    pos <- newIORef initPos
-    keyboardMouseCallback $= Just ( keyboardMouse (dimensions demoGraph) viewParamsRef )
-    motionCallback $= Just ( mouseMotion viewParamsRef pos )
-    passiveMotionCallback $= Just ( passiveMouseMotion pos )
+            visRef <- newIORef visualisation
 
-    idleCallback $= Just idle
-    displayCallback $= display visRef
-    mainLoop
+            -- Initialise OpenGL and assign functions to StateVars
+            initialDisplayMode $= [WithDepthBuffer, DoubleBuffered]
+            initialWindowSize $= Size 800 800
+            _window <- createWindow "DataVis"
+            reshapeCallback $= Just reshape
+            depthFunc $= Just Less
 
--- parseInput :: [String] -> Either (ParseErrorBundle Text Void) Vis
--- parseInput []   = return $ Right demoVis
--- parseInput args = do
---     input <- readFile $ head args
---     return $ runParser pVis "" $ pack input
+            pos <- newIORef initPos
+            keyboardMouseCallback $= Just ( keyboardMouse (dimensions $ graph visualisation) visRef )
+            motionCallback $= Just ( mouseMotion visRef pos )
+            passiveMotionCallback $= Just ( passiveMouseMotion pos )
+            idleCallback $= Just idle
+            displayCallback $= display visRef
+
+            -- Enter the GLUT main loop
+            mainLoop
+
+
+
+{- Helper Functions -}
+
+parseInput :: [String] -> IO ( Either (ParseErrorBundle Text Void) Visualisation )
+parseInput []   = return $ Right demoVis
+parseInput args = do
+    input <- readFile $ head args
+    return $ runParser pVisualisation "" $ pack input
 
 initPos :: Position
 initPos = Position (-1) (-1)
 
-demoVis :: Visualisation Scatter2D
+demoVis :: Visualisation
 demoVis = Vis "TEST" demoGraph initViewParams
 
-demoGraph :: Scatter2D
-demoGraph = Scatter2D ("BADA","BING") [( Raw (Color4 0 0 0 (1::GLfloat)) "Label" [demoData, demoData])]
+demoGraph :: Graph -- Axis Labels, Axis Tick Parameters, Data
+demoGraph = Scatter2D ("BADA","BING") ((0,0),(0,0)) [( Raw "Label" (Color4 0 1 0 (1::GLfloat)) [demoData, demoData])]
 
 demoData :: GraphData
 demoData = toGraphData [1,2,3,4,5::GLfloat]
-
-initViewParams :: ViewParams
-initViewParams = ViewParams [] 1 False False
 
 -- defaultErrorBundle :: ParseErrorBundle e s
 defaultErrorBundle = ParseErrorBundle ((TrivialError 0 Nothing S.empty)NE.:|[]) (PosState "" 0 (SourcePos "" (mkPos 0) (mkPos 0)) (mkPos 0) "")

@@ -3,63 +3,65 @@ module Bindings (reshape, keyboardMouse, mouseMotion, passiveMouseMotion) where
 import Graphics.UI.GLUT hiding (TwoD, ThreeD)
 import Data.IORef
 import Display
+import Visualisation
 import ViewParams
+import Graph
 
 reshape :: ReshapeCallback
 reshape size = do
   viewport $= (Position 0 0, size)
 
-keyboardMouse :: Int -> IORef ViewParams -> KeyboardMouseCallback
+keyboardMouse :: Int -> IORef Visualisation-> KeyboardMouseCallback
 keyboardMouse dims  | dims > 2  = threeDControls
                     | otherwise = twoDControls
 
 
-threeDControls :: IORef ViewParams -> KeyboardMouseCallback
-threeDControls vp key Down _ _ = case key of
-    (MouseButton LeftButton)    -> vp $~! rotating
-    (MouseButton WheelDown)     -> vp $~! zoomOut
-    (MouseButton WheelUp)       -> vp $~! zoomIn
-    (Char 'x')                  -> vp $~! viewAlongX
-    (Char 'y')                  -> vp $~! viewAlongY
-    (Char 'z')                  -> vp $~! viewAlongZ
+threeDControls :: IORef Visualisation -> KeyboardMouseCallback
+threeDControls vis key Down _ _ = case key of
+    (MouseButton LeftButton)    -> vis $~! rotatingVis
+    (MouseButton WheelDown)     -> vis $~! zoomOutVis
+    (MouseButton WheelUp)       -> vis $~! zoomInVis
+    (Char 'x')                  -> vis $~! viewAlongX
+    (Char 'y')                  -> vis $~! viewAlongY
+    (Char 'z')                  -> vis $~! viewAlongZ
     (Char 'q')                  -> leaveMainLoop
 
     _ -> return ()
 
-threeDControls vp key Up _ _ = case key of
-    (MouseButton LeftButton)    -> vp $~! notRotating
+threeDControls vis key Up _ _ = case key of
+    (MouseButton LeftButton)    -> vis $~! notRotatingVis
     _ -> return ()
 
 
 {- Zooming and Panning Controls and Quit -}
-twoDControls :: IORef ViewParams -> KeyboardMouseCallback
-twoDControls vp key Down _ _ = case key of
-    (MouseButton LeftButton)    -> vp $~! panning
-    (MouseButton WheelDown)     -> vp $~! zoomOut
-    (MouseButton WheelUp)       -> vp $~! zoomIn
+twoDControls :: IORef Visualisation -> KeyboardMouseCallback
+twoDControls vis key Down _ _ = case key of
+    (MouseButton LeftButton)    -> vis $~! panningVis
+    (MouseButton WheelDown)     -> vis $~! zoomOutVis
+    (MouseButton WheelUp)       -> vis $~! zoomInVis
     (Char 'q')                  -> leaveMainLoop
     _ -> return ()
 
-twoDControls vp key Up _ _ = case key of
-    (MouseButton LeftButton)    -> vp $~! notPanning
+twoDControls vis key Up _ _ = case key of
+    (MouseButton LeftButton)    -> vis $~! notPanningVis
     _ -> return ()
 
 
 {- PANNING and ROTATING -}
-mouseMotion :: IORef ViewParams -> IORef Position -> MotionCallback
-mouseMotion vp lastPos curPos = do
-    vp' <- get vp
-    if (pan vp') then do
+mouseMotion :: IORef Visualisation -> IORef Position -> MotionCallback
+mouseMotion visRef lastPos curPos = do
+    (Vis t g vp) <- get visRef
+    if (pan vp) then do
         lPos <- get lastPos
         (_, size) <- get viewport
-        let vp'' = panView vp' lPos curPos size
-        writeIORef vp vp''
+        let vp' = panView vp lPos curPos size
+        writeIORef visRef $ Vis t g vp'
         writeIORef lastPos curPos
-    else if (rot vp') then do
+    else if (rot vp) then do
         lPos <- get lastPos
         (_, size) <- get viewport
-        let vp'' = rotView vp' lPos curPos size
-        writeIORef vp vp''
+        let vp' = rotView vp lPos curPos size
+        writeIORef visRef $ Vis t g vp'
         writeIORef lastPos curPos
     else return ()
 
@@ -69,20 +71,38 @@ passiveMouseMotion lastPos curPos = writeIORef lastPos curPos
 
 
 {- Helper Functions -}
+rotatingVis :: Visualisation -> Visualisation
+rotatingVis (Vis t g vp) = Vis t g $ rotating vp
+
 rotating :: ViewParams -> ViewParams
 rotating (ViewParams ts z _ p) = ViewParams ts z True p
+
+notRotatingVis :: Visualisation -> Visualisation
+notRotatingVis (Vis t g vp) = Vis t g $ notRotating vp
 
 notRotating :: ViewParams -> ViewParams
 notRotating (ViewParams ts z _ p) = ViewParams ts z False p
 
+panningVis :: Visualisation -> Visualisation
+panningVis (Vis t g vp) = Vis t g $ panning vp
+
 panning :: ViewParams -> ViewParams
 panning (ViewParams ts z r _) = ViewParams ts z r True
+
+notPanningVis :: Visualisation -> Visualisation
+notPanningVis (Vis t g vp) = Vis t g $ notPanning vp
 
 notPanning :: ViewParams -> ViewParams
 notPanning (ViewParams ts z r _) = ViewParams ts z r False
 
+zoomInVis :: Visualisation -> Visualisation
+zoomInVis (Vis t g vp) = Vis t g $ zoomIn vp
+
 zoomIn :: ViewParams -> ViewParams
 zoomIn (ViewParams ts z r p) = ViewParams ts (z+0.05) r p
+
+zoomOutVis :: Visualisation -> Visualisation
+zoomOutVis (Vis t g vp) = Vis t g $ zoomOut vp
 
 zoomOut :: ViewParams -> ViewParams
 zoomOut (ViewParams ts z r p)
@@ -135,11 +155,20 @@ screenToWorld (Position x y) (Size w h) = (x'-1, y'-1)
         x' = ((fromIntegral x) / (fromIntegral w))*2
         y' = ((fromIntegral y) / (fromIntegral h))*2
 
-viewAlongX :: ViewParams -> ViewParams
-viewAlongX (ViewParams _ z r p) = ViewParams [(rotate (90::GLfloat) $ Vector3 0 1 0)] z r p
+viewAlongX :: Visualisation -> Visualisation
+viewAlongX (Vis t g vp) = Vis t g $ viewAlongXParams vp
 
-viewAlongY :: ViewParams -> ViewParams
-viewAlongY (ViewParams _ z r p) = ViewParams [(rotate (90::GLfloat) $ Vector3 0 0 1), (rotate (90::GLfloat) $ Vector3 1 0 0)] z r p
+viewAlongXParams :: ViewParams -> ViewParams
+viewAlongXParams (ViewParams _ z r p) = ViewParams [(rotate (90::GLfloat) $ Vector3 0 1 0)] z r p
 
-viewAlongZ :: ViewParams -> ViewParams
-viewAlongZ (ViewParams _ z r p) = ViewParams [] z r p
+viewAlongY :: Visualisation -> Visualisation
+viewAlongY (Vis t g vp) = Vis t g $ viewAlongYParams vp
+
+viewAlongYParams :: ViewParams -> ViewParams
+viewAlongYParams (ViewParams _ z r p) = ViewParams [(rotate (90::GLfloat) $ Vector3 0 0 1), (rotate (90::GLfloat) $ Vector3 1 0 0)] z r p
+
+viewAlongZ :: Visualisation -> Visualisation
+viewAlongZ (Vis t g vp) = Vis t g $ viewAlongZParams vp
+
+viewAlongZParams :: ViewParams -> ViewParams
+viewAlongZParams (ViewParams _ z r p) = ViewParams [] z r p

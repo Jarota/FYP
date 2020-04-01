@@ -1,6 +1,8 @@
-Example Visualisation
-2DScatter
-X,Y
-x:[1,2,3,4,5]
-y:[4,5,6,7,8]
-Grey,Green
+Motivation
+Scatter2D
+Week Days,Motivation Level
+
+Dataset:Test
+Red
+x:["Mon","Tue","Wed","Thu","Fri"]
+y:[5,4,3,2,1]

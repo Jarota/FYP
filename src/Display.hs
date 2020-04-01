@@ -7,12 +7,12 @@ import Data.IORef
 import Graph
 import Visualisation
 
-display :: Graph a => IORef (Visualisation a) -> DisplayCallback
+display :: IORef Visualisation -> DisplayCallback
 display visRef = do
     lineSmooth $= Enabled
     pointSmooth $= Enabled
     polygonSmooth $= Enabled
-    clearColor $= Color4 0.6 0.6 0.6 1
+    clearColor $= Color4 0.8 0.8 0.8 1
     clear [ColorBuffer, DepthBuffer]
 
     vis <- get visRef

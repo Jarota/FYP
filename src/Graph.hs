@@ -1,15 +1,13 @@
 module Graph where
 
 import Graphics.UI.GLUT (Color4, GLfloat)
-import ViewParams
 
+import DataSet
+import AxisTicks (TickInfo)
 
-class Graph a where
-    dimensions :: a -> Int
-    dimensions _ = 2
+data Graph
+    = Scatter2D (String,String) (TickInfo, TickInfo) [DataSet]
+    deriving Show
 
-    format :: a -> a
-    format a = a
-    
-    render :: a -> ViewParams -> IO ()
-    render _ _ = return ()
+dimensions :: Graph -> Int
+dimensions (Scatter2D _ _ _) = 2

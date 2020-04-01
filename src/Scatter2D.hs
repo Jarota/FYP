@@ -1,6 +1,6 @@
 {-# LANGUAGE RecordWildCards #-}
 
-module Scatter2D where
+module Scatter2D (format, render) where
 
 import Graphics.UI.GLUT
 
@@ -9,30 +9,78 @@ import DataSet
 import ViewParams
 import Axes
 import AxisTicks
-import Rendering
+import Rendering (renderSquares)
 
---                          Axis Labels      Data
-data Scatter2D = Scatter2D (String,String) [DataSet]
+format :: Graph -> Graph
+format (Scatter2D axisLabels _ gData) = Scatter2D axisLabels ticks gData'
+    where
+        gData'  = formatData gData
+        ticks   = calcTicks2D gData'
 
-instance Graph Scatter2D where
+render :: Graph -> ViewParams -> IO ()
+render (Scatter2D axisLabels ticks gData) ViewParams{..} = do
 
-    format g = g -- TODO (parse data from csv files etc)
-    
-    render (Scatter2D axisLabels gData) ViewParams{..} = do
-        -- Pan, Zoom, and render data
-        sequence transformations
-        -- TODO zoom?
-        -- render' gData -- TODO
+    -- Axes and labels are stationary
+    axes2D
+    axisLabels2D axisLabels
+
+    -- Zoom, pan, and render data
+    scale zoom zoom zoom
+    sequence transformations
+    renderData gData
         
-        -- retrieve resulting modelview matrix for proper axis tick offsets
-        let modelView = matrix $ Just $ Modelview 0 :: StateVar (GLmatrix GLfloat)
-        m <- get modelView
-        ts <- getMatrixComponents ColumnMajor m
-        -- let (ticksX, ticksY) = axisTicks2D gData (ts!!12, ts!!13, ts!!14)
+    -- Retrieve resulting modelview matrix for axis tick offsets
+    let modelView = matrix $ Just $ Modelview 0 :: StateVar (GLmatrix GLfloat)
+    m <- get modelView
+    ts <- getMatrixComponents ColumnMajor m
 
-        -- render the axes, ticks, and labels
-        preservingMatrix $ do
-            loadIdentity
-            axes2D
-            -- renderTicks2D ticksX ticksY
-            axisLabels2D axisLabels
+    loadIdentity
+    renderXticks (zoomTickInfo zoom $ fst ticks) (ts!!12)
+    renderYticks (zoomTickInfo zoom $ snd ticks) (ts!!13)
+
+
+{- Formatting Functions -}
+
+formatData :: [DataSet] -> [DataSet]
+formatData datasets = map (formatDataSet stepX stepY) datasets
+    where
+        allXs   = concatMap getXdata datasets
+        allYs   = concatMap getYdata datasets
+        stepX   = 1.3 / maximum allXs
+        stepY   = 1.3 / maximum allYs
+
+formatDataSet :: GLfloat -> GLfloat -> DataSet -> DataSet
+formatDataSet stepX stepY (Raw c l gData) = Raw c l gData'
+    where
+        xData   = fitGraphData stepX $ head gData
+        yData   = fitGraphData stepY $ gData!!1
+        gData'  = [xData,yData]
+
+fitGraphData :: GLfloat -> GraphData -> GraphData
+fitGraphData step (xs, ss) = (xs', ss)
+    where
+        xs' = map (fit step) xs
+
+fit :: GLfloat -> GLfloat -> GLfloat
+fit step x = -0.7 + (x * step)
+
+
+{- Rendering Functions -}
+
+renderData :: [DataSet] -> IO ()
+renderData []       = return ()
+renderData (d:ds)   = do
+    renderData' d
+    renderData ds
+
+renderData' :: DataSet -> IO ()
+renderData' File{..}   = return ()
+renderData' Raw{..}    = do
+    color dataColor
+    let points = toPoints graphData
+    renderSquares points 0.025
+
+toPoints :: [GraphData] -> [(GLfloat, GLfloat, GLfloat)]
+toPoints (xData:(yData:[])) = zip3 (fst xData) (fst yData) zs
+    where
+        zs = repeat (0::GLfloat)

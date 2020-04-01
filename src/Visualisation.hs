@@ -1,18 +1,32 @@
 {-# LANGUAGE RecordWildCards #-}
 
-module Visualisation where
+module Visualisation (Visualisation(..), formatVis, renderVis) where
+
+import Graphics.UI.GLUT
 
 import Rendering
 import ViewParams
 import Graph
+import qualified Scatter2D as S2D
 
-data (Graph a) => Visualisation a = Vis {
+data Visualisation = Vis {
     title :: String,
-    graph :: a,
+    graph :: Graph,
     viewParams :: ViewParams
-}
+} deriving Show
 
-renderVis :: (Graph a) => Visualisation a -> IO ()
+renderVis :: Visualisation -> IO ()
 renderVis (Vis title graph viewParams) = do
     renderTitle title
-    render graph viewParams
+    renderFrame
+    preservingMatrix $ do
+        renderGraph graph viewParams
+
+renderGraph :: Graph -> ViewParams -> IO ()
+renderGraph g@(Scatter2D _ _ _) vp = S2D.render g vp
+
+formatVis :: Visualisation -> Visualisation
+formatVis (Vis t g vp) = Vis t (formatGraph g) vp
+
+formatGraph :: Graph -> Graph
+formatGraph g@(Scatter2D _ _ _) = S2D.format g
