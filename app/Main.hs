@@ -77,10 +77,10 @@ demoVis :: Visualisation
 demoVis = Vis "TEST" demoGraph initViewParams
 
 demoGraph :: Graph -- Axis Labels, Axis Tick Parameters, Data
-demoGraph = Scatter2D ("BADA","BING") ((0,0),(0,0)) [( Raw "Label" (Color4 0 1 0 (1::GLfloat)) [demoData, demoData])]
+demoGraph = Scatter3D ("BADA","BING","BOOM") ((0,0),(0,0),(0,0)) [( Raw "Label" (Color4 0.5 0 0.5 (1::GLfloat)) [demoData, demoData, demoData])]
 
 demoData :: GraphData
-demoData = toGraphData [1,2,3,4,5::GLfloat]
+demoData = toGraphData (Prelude.take 25 [1..]::[GLfloat])
 
 -- defaultErrorBundle :: ParseErrorBundle e s
 defaultErrorBundle = ParseErrorBundle ((TrivialError 0 Nothing S.empty)NE.:|[]) (PosState "" 0 (SourcePos "" (mkPos 0) (mkPos 0)) (mkPos 0) "")

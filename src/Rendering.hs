@@ -67,12 +67,12 @@ renderCubes :: [(GLfloat, GLfloat, GLfloat)] -> GLfloat -> IO ()
 renderCubes [] _        = return ()
 renderCubes points width    = do
     renderPrimitive Quads $ mapM_ vertex3f ps
-    color $ Color4 1 1 1 (1::GLfloat)
+    color $ Color4 0 0 0 (1::GLfloat)
     renderPrimitive Lines $ mapM_ vertex3f ps'
     where
         ps = concatMap (pointToCube width) points
         -- extra width to avoid 'z-fighting'
-        ps' = concatMap (pointToCubeFrame (width+0.003)) points
+        ps' = concatMap (pointToCubeFrame (width+0.001)) points
 
 pointToCube :: GLfloat -> (GLfloat, GLfloat, GLfloat) -> [(GLfloat, GLfloat, GLfloat)]
 pointToCube l (x, y, z) = [

@@ -8,6 +8,7 @@ import Rendering
 import ViewParams
 import Graph
 import qualified Scatter2D as S2D
+import qualified Scatter3D as S3D
 
 data Visualisation = Vis {
     title :: String,
@@ -24,9 +25,11 @@ renderVis (Vis title graph viewParams) = do
 
 renderGraph :: Graph -> ViewParams -> IO ()
 renderGraph g@(Scatter2D _ _ _) vp = S2D.render g vp
+renderGraph g@(Scatter3D _ _ _) vp = S3D.render g vp
 
 formatVis :: Visualisation -> Visualisation
 formatVis (Vis t g vp) = Vis t (formatGraph g) vp
 
 formatGraph :: Graph -> Graph
 formatGraph g@(Scatter2D _ _ _) = S2D.format g
+formatGraph g@(Scatter3D _ _ _) = S3D.format g

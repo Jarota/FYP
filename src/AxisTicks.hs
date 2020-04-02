@@ -68,6 +68,13 @@ calcTicks2D datasets = (calcTickInfo allXs, calcTickInfo allYs)
         allXs = concatMap getXdata datasets
         allYs = concatMap getYdata datasets
 
+calcTicks3D :: [DataSet] -> (TickInfo, TickInfo, TickInfo)
+calcTicks3D datasets = (calcTickInfo allXs, calcTickInfo allYs, calcTickInfo allZs)
+    where
+        allXs = concatMap getXdata datasets
+        allYs = concatMap getYdata datasets
+        allZs = concatMap getZdata datasets
+
 calcTickInfo :: [GLfloat] -> TickInfo
 calcTickInfo xs = (start, step)
     where

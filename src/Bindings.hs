@@ -19,8 +19,8 @@ keyboardMouse dims  | dims > 2  = threeDControls
 threeDControls :: IORef Visualisation -> KeyboardMouseCallback
 threeDControls vis key Down _ _ = case key of
     (MouseButton LeftButton)    -> vis $~! rotatingVis
-    (MouseButton WheelDown)     -> vis $~! zoomOutVis
-    (MouseButton WheelUp)       -> vis $~! zoomInVis
+    -- (MouseButton WheelDown)     -> vis $~! zoomOutVis
+    -- (MouseButton WheelUp)       -> vis $~! zoomInVis
     (Char 'x')                  -> vis $~! viewAlongX
     (Char 'y')                  -> vis $~! viewAlongY
     (Char 'z')                  -> vis $~! viewAlongZ
@@ -99,7 +99,9 @@ zoomInVis :: Visualisation -> Visualisation
 zoomInVis (Vis t g vp) = Vis t g $ zoomIn vp
 
 zoomIn :: ViewParams -> ViewParams
-zoomIn (ViewParams ts z r p) = ViewParams ts (z+0.05) r p
+zoomIn (ViewParams ts z r p) = ViewParams (t:ts) (z*1.05) r p
+    where
+        t = scale 1.05 1.05 (1.05::GLfloat)
 
 zoomOutVis :: Visualisation -> Visualisation
 zoomOutVis (Vis t g vp) = Vis t g $ zoomOut vp
@@ -107,9 +109,10 @@ zoomOutVis (Vis t g vp) = Vis t g $ zoomOut vp
 zoomOut :: ViewParams -> ViewParams
 zoomOut (ViewParams ts z r p)
     | z' <= 0   = ViewParams ts z r p
-    | otherwise = ViewParams ts z' r p
+    | otherwise = ViewParams (t:ts) z' r p
     where
-        z' = (z-0.05)
+        t = scale 0.95 0.95 (0.95::GLfloat)
+        z' = (z*0.95)
 
 panView :: ViewParams -> Position -> Position -> Size -> ViewParams
 panView (ViewParams ts z r p) pos1 pos2 size = ViewParams (t:ts) z r p

@@ -12,7 +12,7 @@ display visRef = do
     lineSmooth $= Enabled
     pointSmooth $= Enabled
     polygonSmooth $= Enabled
-    clearColor $= Color4 0.8 0.8 0.8 1
+    clearColor $= Color4 0.83 0.83 0.83 1
     clear [ColorBuffer, DepthBuffer]
 
     vis <- get visRef

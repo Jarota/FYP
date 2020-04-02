@@ -1,6 +1,6 @@
 {-# LANGUAGE RecordWildCards #-}
 
-module Scatter2D (format, render) where
+module Scatter3D where
 
 import Graphics.UI.GLUT
 
@@ -9,52 +9,45 @@ import DataSet
 import ViewParams
 import Axes
 import AxisTicks
-import Rendering (renderSquares)
+import Rendering (renderCubes)
 
 format :: Graph -> Graph
-format (Scatter2D axisLabels _ gData) = Scatter2D axisLabels ticks gData'
+format (Scatter3D axisLabels _ gData) = Scatter3D axisLabels ticks gData'
     where
         gData'  = formatData gData
-        ticks   = calcTicks2D gData'
+        ticks   = calcTicks3D gData'
 
 render :: Graph -> ViewParams -> IO ()
-render (Scatter2D axisLabels ticks gData) ViewParams{..} = do
+render (Scatter3D axisLabels ticks gData) ViewParams{..} = do
 
-    -- Axes and labels are stationary
-    axes2D
-    axisLabels2D axisLabels
-
-    -- Zoom, pan, and render data
+    scale 0.7 0.7 (0.7::GLfloat)
     sequence transformations
     renderData gData
-        
-    -- Retrieve resulting modelview matrix for axis tick offsets
-    let modelView = matrix $ Just $ Modelview 0 :: StateVar (GLmatrix GLfloat)
-    m <- get modelView
-    ts <- getMatrixComponents ColumnMajor m
-    let z = head ts
+    axes3D
+    renderTicks3D ticks
+    axisLabels3D axisLabels
 
-    loadIdentity
-    renderXticks (zoomTickInfo z $ fst ticks) (ts!!12)
-    renderYticks (zoomTickInfo z $ snd ticks) (ts!!13)
 
 
 {- Formatting Functions -}
 
 formatData :: [DataSet] -> [DataSet]
-formatData datasets = map (formatDataSet stepX stepY) datasets
+formatData datasets = map (formatDataSet stepX stepY stepZ) datasets
     where
         allXs   = concatMap getXdata datasets
         allYs   = concatMap getYdata datasets
+        allZs   = concatMap getZdata datasets
         stepX   = 1.3 / maximum allXs
         stepY   = 1.3 / maximum allYs
+        stepZ   = 1.3 / maximum allZs
 
-formatDataSet :: GLfloat -> GLfloat -> DataSet -> DataSet
-formatDataSet stepX stepY (Raw c l gData) = Raw c l gData'
+formatDataSet :: GLfloat -> GLfloat -> GLfloat -> DataSet -> DataSet
+formatDataSet stepX stepY stepZ (Raw c l gData) = Raw c l gData'
     where
         xData   = fitGraphData stepX $ head gData
         yData   = fitGraphData stepY $ gData!!1
-        gData'  = [xData,yData]
+        zData   = fitGraphData stepZ $ gData!!2
+        gData'  = [xData,yData,zData]
 
 fitGraphData :: GLfloat -> GraphData -> GraphData
 fitGraphData step (xs, ss) = (xs', ss)
@@ -78,9 +71,13 @@ renderData' File{..}   = return ()
 renderData' Raw{..}    = do
     color dataColor
     let points = toPoints graphData
-    renderSquares points 0.025
+    renderCubes points 0.02
 
 toPoints :: [GraphData] -> [(GLfloat, GLfloat, GLfloat)]
-toPoints (xData:(yData:[])) = zip3 (fst xData) (fst yData) zs
-    where
-        zs = repeat (0::GLfloat)
+toPoints [xData,yData,zData] = zip3 (fst xData) (fst yData) (fst zData)
+
+renderTicks3D :: (TickInfo, TickInfo, TickInfo) -> IO ()
+renderTicks3D (xs,ys,zs) = do
+    renderXticks xs 0
+    renderYticks ys 0
+    renderZticks zs 0
