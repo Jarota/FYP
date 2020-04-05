@@ -1,6 +1,6 @@
 {-# LANGUAGE RecordWildCards #-}
 
-module Scatter3D where
+module Scatter3D (format, render) where
 
 import Graphics.UI.GLUT
 
@@ -25,7 +25,7 @@ render (Scatter3D axisLabels ticks gData) ViewParams{..} = do
     renderData gData
     axes3D
     renderTicks3D ticks
-    axisLabels3D axisLabels
+    -- axisLabels3D axisLabels
 
 
 
@@ -75,9 +75,3 @@ renderData' Raw{..}    = do
 
 toPoints :: [GraphData] -> [(GLfloat, GLfloat, GLfloat)]
 toPoints [xData,yData,zData] = zip3 (fst xData) (fst yData) (fst zData)
-
-renderTicks3D :: (TickInfo, TickInfo, TickInfo) -> IO ()
-renderTicks3D (xs,ys,zs) = do
-    renderXticks xs 0
-    renderYticks ys 0
-    renderZticks zs 0

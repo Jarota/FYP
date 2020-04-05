@@ -8,8 +8,9 @@ import AxisTicks (TickInfo)
 data Graph
     = Scatter2D (String,String) (TickInfo, TickInfo) [DataSet]
     | Scatter3D (String,String,String) (TickInfo, TickInfo, TickInfo) [DataSet]
+    | Bar2D (String,String) (TickInfo, TickInfo) [DataSet]
     deriving Show
 
 dimensions :: Graph -> Int
-dimensions (Scatter2D _ _ _) = 2
 dimensions (Scatter3D _ _ _) = 3
+dimensions _ = 2

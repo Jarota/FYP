@@ -8,6 +8,12 @@ type TickInfo = (GLfloat, GLfloat) -- start pos and step
 
 {- Rendering Functions -}
 
+renderTicks3D :: (TickInfo, TickInfo, TickInfo) -> IO ()
+renderTicks3D (xs,ys,zs) = do
+    renderXticks xs 0
+    renderYticks ys 0
+    renderZticks zs 0
+
 renderXticks :: TickInfo -> GLfloat -> IO ()
 renderXticks (start,step) offset = do
     color $ Color4 0 0 0 (1::GLfloat)

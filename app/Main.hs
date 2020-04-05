@@ -38,9 +38,6 @@ main = do
                 OR parse them as they come in Parser.hs?
             -}
             let visualisation = formatVis inputVis
-
-            writeFile "log.txt" $ show visualisation
-
             visRef <- newIORef visualisation
 
             -- Initialise OpenGL and assign functions to StateVars
@@ -77,10 +74,19 @@ demoVis :: Visualisation
 demoVis = Vis "TEST" demoGraph initViewParams
 
 demoGraph :: Graph -- Axis Labels, Axis Tick Parameters, Data
-demoGraph = Scatter3D ("BADA","BING","BOOM") ((0,0),(0,0),(0,0)) [( Raw "Label" (Color4 0.5 0 0.5 (1::GLfloat)) [demoData, demoData, demoData])]
+demoGraph = Bar2D ("BADA","BING") ((0,0),(0,0)) [( Raw "Label1" (Color4 0.5 0 0.5 (1::GLfloat)) [demoDataX1, demoDataY1]),( Raw "Label2" (Color4 0 0 1 (1::GLfloat)) [demoDataX2, demoDataY2])]
 
-demoData :: GraphData
-demoData = toGraphData (Prelude.take 25 [1..]::[GLfloat])
+demoDataX1 :: GraphData
+demoDataX1 = toGraphData ([1,2,3,4,5]::[GLfloat])
+
+demoDataX2 :: GraphData
+demoDataX2 = toGraphData ([1,2,3,4,5]::[GLfloat])
+
+demoDataY1 :: GraphData
+demoDataY1 = toGraphData ([3,4,6,2,5]::[GLfloat])
+
+demoDataY2 :: GraphData
+demoDataY2 = toGraphData ([2,8,3,10,4]::[GLfloat])
 
 -- defaultErrorBundle :: ParseErrorBundle e s
 defaultErrorBundle = ParseErrorBundle ((TrivialError 0 Nothing S.empty)NE.:|[]) (PosState "" 0 (SourcePos "" (mkPos 0) (mkPos 0)) (mkPos 0) "")
