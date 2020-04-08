@@ -23,18 +23,19 @@ render (Bar2D axisLabels ticks gData) ViewParams{..} = do
     axes2D
     axisLabels2D axisLabels
 
-    -- Zoom, pan, and render data
     sequence transformations
-
-    let xStep = snd $ fst ticks
-    let w = xStep / (fromIntegral $ 1 + (length gData))
-    renderData gData xStep w
-    
-    -- Retrieve resulting modelview matrix for axis tick offsets
+    -- Retrieve resulting modelview matrix for certain offsets
     let modelView = matrix $ Just $ Modelview 0 :: StateVar (GLmatrix GLfloat)
     m <- get modelView
     ts <- getMatrixComponents ColumnMajor m
-    let z = head ts
+    let
+        y       = -0.7
+        z       = head ts
+        yDiff   = ((ts!!13) / z) - ( ((y*z) - ((y*z) - y)) / z )
+        xStep   = snd $ fst ticks
+        w       = xStep / (fromIntegral $ 1 + (length gData))
+    
+    renderData gData xStep yDiff w
 
     loadIdentity
     renderXticks (zoomTickInfo z $ fst ticks) (ts!!12)
@@ -71,19 +72,19 @@ fit step x = -0.7 + (x * step)
 
 {- Rendering Functions -}
 
-renderData :: [DataSet] -> GLfloat -> GLfloat -> IO ()
-renderData [] _ _           = return ()
-renderData (d:ds) xStep w   = do
-    renderData' d xStep w $ fromIntegral $ (length ds) + 1
-    renderData ds xStep w
+renderData :: [DataSet] -> GLfloat -> GLfloat -> GLfloat -> IO ()
+renderData [] _ _ _             = return ()
+renderData (d:ds) xStep yDiff w = do
+    renderData' d xStep yDiff w $ fromIntegral $ (length ds) + 1
+    renderData ds xStep yDiff w
 
 
-renderData' :: DataSet -> GLfloat -> GLfloat -> GLfloat -> IO ()
-renderData' File{..} _ _ _    = return ()
-renderData' Raw{..} xStep w n = do
+renderData' :: DataSet -> GLfloat -> GLfloat -> GLfloat -> GLfloat -> IO ()
+renderData' File{..} _ _ _ _        = return ()
+renderData' Raw{..} xStep yDiff w n = do
     color dataColor
     let points = toPoints graphData xStep w n
-    renderBars points $ w/2
+    renderBars points yDiff $ w/2
 
 toPoints :: [GraphData] -> GLfloat -> GLfloat -> GLfloat -> [(GLfloat, GLfloat, GLfloat)]
 toPoints [xData,yData] xStep w n = zip3 xs (fst yData) zs

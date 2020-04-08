@@ -49,18 +49,18 @@ pointToSquare l (x, y, z) = [
         (x-l, y-l, z)
     ]
 
-renderBars :: [(GLfloat, GLfloat, GLfloat)] -> GLfloat -> IO ()
-renderBars [] _     = return ()
-renderBars ps width = renderPrimitive Quads $ mapM_ vertex3f ps'
+renderBars :: [(GLfloat, GLfloat, GLfloat)] -> GLfloat -> GLfloat -> IO ()
+renderBars [] _ _           = return ()
+renderBars ps yDiff width   = renderPrimitive Quads $ mapM_ vertex3f ps'
     where
-        ps' = concatMap (pointToBar width) ps
+        ps' = concatMap (pointToBar yDiff width) ps
 
-pointToBar :: GLfloat -> (GLfloat, GLfloat, GLfloat) -> [(GLfloat, GLfloat, GLfloat)]
-pointToBar l (x, y, z) = [
-        (x-l, y+l, z),
-        (x+l, y+l, z),
-        (x+l, -0.7, z),
-        (x-l, -0.7, z)
+pointToBar :: GLfloat -> GLfloat -> (GLfloat, GLfloat, GLfloat) -> [(GLfloat, GLfloat, GLfloat)]
+pointToBar yDiff l (x, y, z) = [
+        (x-l, y, z),
+        (x+l, y, z),
+        (x+l, -0.7-yDiff, z),
+        (x-l, -0.7-yDiff, z)
     ]
 
 renderCubes :: [(GLfloat, GLfloat, GLfloat)] -> GLfloat -> IO ()

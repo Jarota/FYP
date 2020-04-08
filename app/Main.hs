@@ -74,7 +74,7 @@ demoVis :: Visualisation
 demoVis = Vis "TEST" demoGraph initViewParams
 
 demoGraph :: Graph -- Axis Labels, Axis Tick Parameters, Data
-demoGraph = Bar2D ("BADA","BING") ((0,0),(0,0)) [( Raw "Label1" (Color4 0.5 0 0.5 (1::GLfloat)) [demoDataX1, demoDataY1]),( Raw "Label2" (Color4 0 0 1 (1::GLfloat)) [demoDataX2, demoDataY2])]
+demoGraph = Bar2D ("BADA","BING") ((0,0),(0,0)) [( Raw "Label1" (Color4 0.5 0 0.5 (1::GLfloat)) [demoDataX1, demoDataY1]),( Raw "Label2" (Color4 0 1 0 (1::GLfloat)) [demoDataX2, demoDataY2])]
 
 demoDataX1 :: GraphData
 demoDataX1 = toGraphData ([1,2,3,4,5]::[GLfloat])
