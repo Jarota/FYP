@@ -1,9 +1,13 @@
 Motivation
-Scatter3D
-Week Days,Motivation,Entusiasm
+Bar2D
+Week Days,Motivation
 
 Dataset:James
 Blue
 x:["Mon","Tue","Wed","Thu","Fri"]
 y:[5,4,3,2,1]
-z:[7,11,14,17,19]
+
+Dataset:Adam
+Red
+x:["Mon","Tue","Wed","Thu","Fri"]
+y:[1,1,1,0,0]

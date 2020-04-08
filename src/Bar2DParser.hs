@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Scatter3DParser (pScatter3D) where
+module Bar2DParser (pBar2D) where
 
 import Control.Monad
 import Data.Text (Text)
@@ -17,22 +17,12 @@ import Graph
 import DataSet
 import HelperParsers
 
-pScatter3D :: Parser Graph
-pScatter3D = do
-    axisLabels <- pAxisLabels
+pBar2D :: Parser Graph
+pBar2D = do
+    axisLabels <- pAxisLabels2D
     d <- pDataSet
     ds <- many pDataSets
-    return $ Scatter3D axisLabels ((0,0),(0,0),(0,0)) (d:ds)
-
-pAxisLabels :: Parser (String,String,String)
-pAxisLabels = do
-    xLabel <- some alphaNumCharWithSpace
-    void $ char ','
-    yLabel <- some alphaNumCharWithSpace
-    void $ char ','
-    zLabel <- some alphaNumCharWithSpace
-    void newline
-    return (xLabel,yLabel,zLabel)
+    return $ Bar2D axisLabels ((0,0),(0,0)) (d:ds)
 
 pDataSets :: Parser DataSet
 pDataSets = do
@@ -61,8 +51,4 @@ pDataSet' label dataColor = do
         void $ string "y:["
         ys <- pGraphData
         void $ char ']'
-        void newline
-        void $ string "z:["
-        zs <- pGraphData
-        void $ char ']'
-        return $ Raw label dataColor [xs,ys,zs]
+        return $ Raw label dataColor [xs,ys]
