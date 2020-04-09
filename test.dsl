@@ -1,13 +1,8 @@
-Motivation
+Productivity
 Bar2D
-Week Days,Motivation
+Day,LoC in 1000s
 
-Dataset:James
-Blue
-x:["Mon","Tue","Wed","Thu","Fri"]
-y:[5,4,3,2,1]
-
-Dataset:Adam
-Red
-x:["Mon","Tue","Wed","Thu","Fri"]
-y:[1,1,1,0,0]
+Dataset:Me
+Green
+x:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
+y:[0.5,0.7,0.4,0.6,1,0.2,0.5]

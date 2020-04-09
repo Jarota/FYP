@@ -7,6 +7,7 @@ import Graphics.UI.GLUT
 import Graph
 import DataSet
 import ViewParams
+import Legend
 import Axes
 import AxisTicks
 import Rendering (renderBars)
@@ -23,6 +24,9 @@ render (Bar2D axisLabels ticks gData) ViewParams{..} = do
     axes2D
     axisLabels2D axisLabels
 
+    renderLegend gData (0.5,0.9)
+
+    loadIdentity
     sequence transformations
     -- Retrieve resulting modelview matrix for certain offsets
     let modelView = matrix $ Just $ Modelview 0 :: StateVar (GLmatrix GLfloat)
