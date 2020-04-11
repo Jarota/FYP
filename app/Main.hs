@@ -74,19 +74,16 @@ demoVis :: Visualisation
 demoVis = Vis "TEST" demoGraph initViewParams
 
 demoGraph :: Graph -- Axis Labels, Axis Tick Parameters, Data
-demoGraph = Bar2D ("BADA","BING") ((0,0),(0,0)) [( Raw "Label1" (Color4 0.5 0 0.5 (1::GLfloat)) [demoDataX1, demoDataY1]),( Raw "Label2" (Color4 0 1 0 (1::GLfloat)) [demoDataX2, demoDataY2])]
+demoGraph = Pie [
+    ( Raw "Rock" (Color4 0.6 0.3 0 1) [pieData]),
+    ( Raw "Paper" (Color4 0 0 1 1) [pieData]),
+    ( Raw "Scissors" (Color4 1 0 0 1) [pieData]),
+    ( Raw "Lizard" (Color4 0 1 0 1) [pieData]),
+    ( Raw "Spock" (Color4 0.5 0 0.5 1) [pieData])
+    ]
 
-demoDataX1 :: GraphData
-demoDataX1 = toGraphData ([1,2,3,4,5]::[GLfloat])
-
-demoDataX2 :: GraphData
-demoDataX2 = toGraphData ([1,2,3,4,5]::[GLfloat])
-
-demoDataY1 :: GraphData
-demoDataY1 = toGraphData ([3,4,6,2,5]::[GLfloat])
-
-demoDataY2 :: GraphData
-demoDataY2 = toGraphData ([2,8,3,10,4]::[GLfloat])
+pieData :: GraphData
+pieData = toGraphData ([1]::[GLfloat])
 
 -- defaultErrorBundle :: ParseErrorBundle e s
 defaultErrorBundle = ParseErrorBundle ((TrivialError 0 Nothing S.empty)NE.:|[]) (PosState "" 0 (SourcePos "" (mkPos 0) (mkPos 0)) (mkPos 0) "")

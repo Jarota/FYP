@@ -1,8 +1,13 @@
-Productivity
+Coolness
 Bar2D
-Day,LoC in 1000s
+Day,Coolness Level
 
 Dataset:Me
-Green
+Blue
 x:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
-y:[0.5,0.7,0.4,0.6,1,0.2,0.5]
+y:[10,10,10,10,10,10,10]
+
+Dataset:You
+Orange
+x:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
+y:[1,1,1,1,1,1,1]

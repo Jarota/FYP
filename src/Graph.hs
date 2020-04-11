@@ -9,6 +9,7 @@ data Graph
     = Scatter2D (String,String) (TickInfo, TickInfo) [DataSet]
     | Scatter3D (String,String,String) (TickInfo, TickInfo, TickInfo) [DataSet]
     | Bar2D (String,String) (TickInfo, TickInfo) [DataSet]
+    | Pie [DataSet]
     deriving Show
 
 dimensions :: Graph -> Int

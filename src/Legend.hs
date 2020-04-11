@@ -12,19 +12,19 @@ renderLegend :: [DataSet] -> (GLfloat, GLfloat) -> IO ()
 renderLegend ds (x,y) = do
     loadIdentity
     translate $ Vector3 x y (-1)
-    renderKeys ds 0
+    renderKeys ds
 
-renderKeys :: [DataSet] -> GLfloat -> IO ()
-renderKeys [] _     = return ()
-renderKeys (d:ds) y = do
-    renderKey d y
-    renderKeys ds (y+0.1)
+renderKeys :: [DataSet] -> IO ()
+renderKeys []     = return ()
+renderKeys (d:ds) = do
+    renderKey d
+    renderKeys ds
 
-renderKey :: DataSet -> GLfloat -> IO ()
-renderKey File{..} _    = return ()
-renderKey Raw{..} y     = do
+renderKey :: DataSet -> IO ()
+renderKey File{..}    = return ()
+renderKey Raw{..}     = do
     -- Translate down to appropriate position in list
-    translate $ Vector3 0 (-y) (0::GLfloat)
+    translate $ Vector3 0 (-0.1) (0::GLfloat)
 
     -- Render small square of correct color
     preservingMatrix $ do

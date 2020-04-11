@@ -63,6 +63,10 @@ pointToBar yDiff l (x, y, z) = [
         (x-l, -0.7-yDiff, z)
     ]
 
+renderTriangleFan :: [(GLfloat, GLfloat, GLfloat)] -> IO ()
+renderTriangleFan [] = return ()
+renderTriangleFan ps = renderPrimitive TriangleFan $ mapM_ vertex3f ps
+
 renderCubes :: [(GLfloat, GLfloat, GLfloat)] -> GLfloat -> IO ()
 renderCubes [] _        = return ()
 renderCubes points width    = do
