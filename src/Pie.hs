@@ -22,7 +22,7 @@ render (Pie gData) ViewParams{..} = do
 
     loadIdentity
     translate $ Vector3 (-0.1) 0 (0::GLfloat)
-    renderData gData 0
+    renderData gData $ pi / 2
 
 
 {- Formatting Functions -}

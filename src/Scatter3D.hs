@@ -6,6 +6,7 @@ import Graphics.UI.GLUT
 
 import Graph
 import DataSet
+import Legend
 import ViewParams
 import Axes
 import AxisTicks
@@ -20,6 +21,9 @@ format (Scatter3D axisLabels _ gData) = Scatter3D axisLabels ticks gData'
 render :: Graph -> ViewParams -> IO ()
 render (Scatter3D axisLabels ticks gData) ViewParams{..} = do
 
+    renderLegend gData (0.625, 0.7)
+
+    loadIdentity
     scale 0.7 0.7 (0.7::GLfloat)
     sequence transformations
     renderData gData

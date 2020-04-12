@@ -12,6 +12,7 @@ import qualified Data.Text as T
 import qualified Text.Megaparsec.Char.Lexer as L
 
 import HelperParsers
+import PieParser
 import Bar2DParser
 import Scatter2DParser
 import Scatter3DParser
@@ -21,7 +22,7 @@ import ViewParams
 import Graph
 
 -- Enum type for branching to correct graph parser
-data GraphType = Sca2D | Sca3D | Ba2D
+data GraphType = Sca2D | Sca3D | Ba2D | Pi
 
 
 {- DSL Parsers -}
@@ -38,8 +39,8 @@ pGraphType :: Parser GraphType
 pGraphType = choice [
     Sca2D   <$ string "Scatter2D",
     Sca3D   <$ string "Scatter3D",
-    Ba2D    <$ string "Bar2D"
-    -- Pi      <$ string "Pie"
+    Ba2D    <$ string "Bar2D",
+    Pi      <$ string "Pie"
     ]
 
 pGraph :: GraphType -> Parser Graph
@@ -47,4 +48,4 @@ pGraph graphType = case graphType of
     Sca2D   -> pScatter2D
     Sca3D   -> pScatter3D
     Ba2D    -> pBar2D
-    -- Pi      -> pPie
+    Pi      -> pPie
