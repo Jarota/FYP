@@ -9,6 +9,7 @@ import DataSet
 import ViewParams
 import Axes
 import AxisTicks
+import Legend
 import Rendering (renderSquares)
 
 format :: Graph -> Graph
@@ -20,10 +21,11 @@ format (Scatter2D axisLabels _ gData) = Scatter2D axisLabels ticks gData'
 render :: Graph -> ViewParams -> IO ()
 render (Scatter2D axisLabels ticks gData) ViewParams{..} = do
 
-    -- Axes and labels are stationary
+    -- Legen, axes and labels are stationary
     axes2D
     axisLabels2D axisLabels
-
+    renderLegend gData (0.63,0.73)
+    loadIdentity
     -- Zoom, pan, and render data
     sequence transformations
     renderData gData

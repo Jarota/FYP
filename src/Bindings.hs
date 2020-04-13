@@ -39,6 +39,7 @@ twoDControls vis key Down _ _ = case key of
     (MouseButton LeftButton)    -> vis $~! panningVis
     (MouseButton WheelDown)     -> vis $~! zoomOutVis
     (MouseButton WheelUp)       -> vis $~! zoomInVis
+    (Char 'r')                  -> vis $~! resetVis
     (Char 'q')                  -> leaveMainLoop
     _ -> return ()
 
@@ -114,6 +115,12 @@ zoomOut (ViewParams ts z r p)
         t = scale 0.95 0.95 (0.95::GLfloat)
         z' = (z*0.95)
 
+resetVis :: Visualisation -> Visualisation
+resetVis (Vis t g vp) = Vis t g $ reset vp
+
+reset :: ViewParams -> ViewParams
+reset _ = ViewParams [] 1 False False
+
 panView :: ViewParams -> Position -> Position -> Size -> ViewParams
 panView (ViewParams ts z r p) pos1 pos2 size = ViewParams (t:ts) z r p
     where
@@ -125,7 +132,7 @@ panView (ViewParams ts z r p) pos1 pos2 size = ViewParams (t:ts) z r p
 rotView :: ViewParams -> Position -> Position -> Size -> ViewParams
 rotView (ViewParams ts z r p) pos1 pos2 size
     | pos1 == pos2  = ViewParams ts z r p
-    | otherwise     = ViewParams (t++ts) z r p
+    | otherwise     = ViewParams (t++ts++u) z r p
     where
         (x1, y1)    = screenToWorld pos1 size
         (x2, y2)    = screenToWorld pos2 size
@@ -135,6 +142,7 @@ rotView (ViewParams ts z r p) pos1 pos2 size
         zAngle      = angleToPrimaryAxis x y h
         xAngle      = h * (-90)
         t           = arbitraryRotation zAngle xAngle
+        u           = arbitraryRotation zAngle (-xAngle)
 
 arbitraryRotation :: GLdouble -> GLdouble -> [IO ()]
 arbitraryRotation zAngle xAngle = [
@@ -162,13 +170,25 @@ viewAlongX :: Visualisation -> Visualisation
 viewAlongX (Vis t g vp) = Vis t g $ viewAlongXParams vp
 
 viewAlongXParams :: ViewParams -> ViewParams
-viewAlongXParams (ViewParams _ z r p) = ViewParams [(rotate (90::GLfloat) $ Vector3 0 1 0)] z r p
+viewAlongXParams (ViewParams _ z r p) = ViewParams ts z r p
+    where
+        ts = [
+              (rotate (90::GLfloat) $ Vector3 0 1 0)
+            , (rotate (-90::GLfloat) $ Vector3 0 1 0)
+            ]
 
 viewAlongY :: Visualisation -> Visualisation
 viewAlongY (Vis t g vp) = Vis t g $ viewAlongYParams vp
 
 viewAlongYParams :: ViewParams -> ViewParams
-viewAlongYParams (ViewParams _ z r p) = ViewParams [(rotate (90::GLfloat) $ Vector3 0 0 1), (rotate (90::GLfloat) $ Vector3 1 0 0)] z r p
+viewAlongYParams (ViewParams _ z r p) = ViewParams ts z r p
+    where
+        ts = [
+              (rotate (90::GLfloat) $ Vector3 0 0 1)
+            , (rotate (90::GLfloat) $ Vector3 1 0 0)
+            , (rotate (-90::GLfloat) $ Vector3 1 0 0)
+            , (rotate (-90::GLfloat) $ Vector3 0 0 1)
+            ]
 
 viewAlongZ :: Visualisation -> Visualisation
 viewAlongZ (Vis t g vp) = Vis t g $ viewAlongZParams vp

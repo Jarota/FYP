@@ -24,12 +24,13 @@ render (Scatter3D axisLabels ticks gData) ViewParams{..} = do
     renderLegend gData (0.625, 0.7)
 
     loadIdentity
-    scale 0.7 0.7 (0.7::GLfloat)
-    sequence transformations
+    scale 0.6 0.6 (0.6::GLfloat)
+    let half = round $ (fromIntegral $ length transformations) / 2
+    sequence $ take half transformations
     renderData gData
     axes3D
     renderTicks3D ticks
-    -- axisLabels3D axisLabels
+    axisLabels3D axisLabels $ drop half transformations
 
 
 
