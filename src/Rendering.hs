@@ -1,10 +1,31 @@
 module Rendering where
 
 import Graphics.UI.GLUT
-import Types
 
 vertex3f :: (GLfloat, GLfloat, GLfloat) -> IO ()
 vertex3f (x, y, z) = vertex $ Vertex3 x y z
+
+renderTitle :: String -> IO ()
+renderTitle title = preservingMatrix $ do
+    scale 0.001 0.001 (0.001::GLfloat)
+    color $ Color4 0 0 0 (1::GLfloat)
+    width <- stringWidth Roman title
+    let offset = (fromIntegral width)/2
+    translate $ Vector3 (-offset) 850 (-1000::GLfloat)
+    renderString Roman title
+
+renderFrame :: IO ()
+renderFrame = do
+    color $ Color4 0.85 0.85 0.85 (1::GLfloat)
+    renderPrimitive Quads $ mapM_ vertex3f frame
+
+frame :: [(GLfloat, GLfloat, GLfloat)]
+frame = [
+        (-1, 1, -0.9), (-0.7, 1, -0.9), (-0.7, -1, -0.9), (-1, -1, -0.9), -- Left
+        (1, 1, -0.9), (0.7, 1, -0.9), (0.7, -1, -0.9), (1, -1, -0.9), -- Right
+        (-0.7, -0.7, -0.9), (0.7, -0.7, -0.9), (0.7, -1, -0.9), (-0.7, -1, -0.9), -- Bottom
+        (-0.7, 0.7, -0.9), (0.7, 0.7, -0.9), (0.7, 1, -0.9), (-0.7, 1, -0.9) -- Top
+    ]
 
 renderLines :: [(GLfloat, GLfloat, GLfloat)] -> IO ()
 renderLines [] = return ()
@@ -28,99 +49,34 @@ pointToSquare l (x, y, z) = [
         (x-l, y-l, z)
     ]
 
+renderBars :: [(GLfloat, GLfloat, GLfloat)] -> GLfloat -> GLfloat -> IO ()
+renderBars [] _ _           = return ()
+renderBars ps yDiff width   = renderPrimitive Quads $ mapM_ vertex3f ps'
+    where
+        ps' = concatMap (pointToBar yDiff width) ps
+
+pointToBar :: GLfloat -> GLfloat -> (GLfloat, GLfloat, GLfloat) -> [(GLfloat, GLfloat, GLfloat)]
+pointToBar yDiff l (x, y, z) = [
+        (x-l, y, z),
+        (x+l, y, z),
+        (x+l, -0.7-yDiff, z),
+        (x-l, -0.7-yDiff, z)
+    ]
+
+renderTriangleFan :: [(GLfloat, GLfloat, GLfloat)] -> IO ()
+renderTriangleFan [] = return ()
+renderTriangleFan ps = renderPrimitive TriangleFan $ mapM_ vertex3f ps
+
 renderCubes :: [(GLfloat, GLfloat, GLfloat)] -> GLfloat -> IO ()
 renderCubes [] _        = return ()
-renderCubes ps width    = do
-    renderPrimitive Quads $ mapM_ vertex3f ps'
-    color $ convertColour Types.White
-    renderPrimitive Lines $ mapM_ vertex3f ps''
+renderCubes points width    = do
+    renderPrimitive Quads $ mapM_ vertex3f ps
+    color $ Color4 0 0 0 (1::GLfloat)
+    renderPrimitive Lines $ mapM_ vertex3f ps'
     where
-        ps' = concatMap (pointToCube width) ps
-        ps'' = concatMap (pointToCubeFrame width) ps
-
-renderBars :: [(GLfloat, GLfloat, GLfloat)] -> GLfloat -> IO ()
-renderBars [] _     = return ()
-renderBars ps width = renderPrimitive Quads $ mapM_ vertex3f ps'
-    where
-        ps' = concatMap (pointToBar width) ps
-
-pointToBar :: GLfloat -> (GLfloat, GLfloat, GLfloat) -> [(GLfloat, GLfloat, GLfloat)]
-pointToBar l (x, y, z) = [
-        (x-l, y+l, z),
-        (x+l, y+l, z),
-        (x+l, -0.8, z),
-        (x-l, -0.8, z)
-    ]
-
-redoBackground :: [(GLfloat, GLfloat, GLfloat)] -> IO ()
-redoBackground ps = renderPrimitive Quads $ mapM_ vertex3f ps
-
-bg2D :: [(GLfloat, GLfloat, GLfloat)]
-bg2D = [
-        (-1, 1, 0), (-0.8, 1, 0), (-0.8, -0.8, 0), (-1, -0.8, 0),   -- Left
-        (-1, -0.8, 0), (1, -0.8, 0), (1, -1, 0), (-1, -1, 0)        -- Bottom
-    ]
-
-bg3D :: [(GLfloat, GLfloat, GLfloat)]
-bg3D = [
-        (-1, 1, 0), (-0.8, 1, 0), (-0.8, -0.8, 0), (-1, -0.8, 0),   -- Left
-        (-1, -0.8, 0), (1, -0.8, 0), (1, -1, 0), (-1, -1, 0)        -- Bottom
-    ]
-
-renderTitle :: String -> IO ()
-renderTitle title = preservingMatrix $ do
-    scale 0.001 0.001 (0.001::GLfloat)
-    color $ convertColour Types.White
-    width <- stringWidth Roman title
-    let offset = (fromIntegral width)/2
-    translate $ Vector3 (-offset) 850 (0::GLfloat)
-    renderString Roman title
-
-axisLabels2D :: AxisLabels -> IO ()
-axisLabels2D (y:(x:_)) = preservingMatrix $ do
-    color $ convertColour Types.White
-    scale 0.0005 0.0005 (0.0005::GLfloat)
-    preservingMatrix $ do
-        widthY <- stringWidth Roman y
-        let offsetY = (fromIntegral widthY)/2
-        rotate 90 $ Vector3 0 0 (1::GLfloat)
-        translate $ Vector3 (-offsetY) (1800) (0::GLfloat)
-        renderString Roman y
-    preservingMatrix $ do
-        widthX <- stringWidth Roman x
-        let offsetX = (fromIntegral widthX)/2
-        translate $ Vector3 (-offsetX) (-1800) (0::GLfloat)
-        renderString Roman x
-
-axisLabels3D :: AxisLabels -> (GLfloat, GLfloat) -> IO ()
-axisLabels3D (z:(y:(x:_))) (xDeg, yDeg) = preservingMatrix $ do
-    color $ convertColour Types.White
-    scale 0.0005 0.0005 (0.0005::GLfloat)
-    preservingMatrix $ do
-        widthY <- stringWidth Roman y
-        let offsetY = (fromIntegral widthY)/2
-        translate $ Vector3 (-1850) 0 (-1850::GLfloat)
-        preservingMatrix $ do
-            rotate (-yDeg) $ Vector3 0 1 0
-            rotate (-xDeg) $ Vector3 1 0 0
-            rotate 90 $ Vector3 0 0 (1::GLfloat)
-            translate $ Vector3 (-offsetY) 0 (0::GLfloat)
-            renderString Roman y
-    preservingMatrix $ do
-        widthX <- stringWidth Roman x
-        let offsetX = (fromIntegral widthX)/2
-        translate $ Vector3 (-offsetX) (-1850) (-1850::GLfloat)
-        rotate (-yDeg) $ Vector3 0 1 0
-        rotate (-xDeg) $ Vector3 1 0 0
-        renderString Roman x
-    preservingMatrix $ do
-        widthZ <- stringWidth Roman z
-        let offsetZ = (fromIntegral widthZ)/2
-        translate $ Vector3 (-offsetZ-1850) (-1850) (0::GLfloat)
-        rotate (-yDeg) $ Vector3 0 1 0
-        rotate (-xDeg) $ Vector3 1 0 0
-        renderString Roman z
-
+        ps = concatMap (pointToCube width) points
+        -- extra width to avoid 'z-fighting'
+        ps' = concatMap (pointToCubeFrame (width+0.001)) points
 
 pointToCube :: GLfloat -> (GLfloat, GLfloat, GLfloat) -> [(GLfloat, GLfloat, GLfloat)]
 pointToCube l (x, y, z) = [

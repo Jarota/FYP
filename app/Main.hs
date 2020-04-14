@@ -1,16 +1,9 @@
-{-# LANGUAGE OverloadedStrings, RecordWildCards, NamedFieldPuns #-}
+{-# LANGUAGE OverloadedStrings, RecordWildCards #-}
 
 module Main where
 
 import Graphics.UI.GLUT hiding (TwoD, ThreeD)
 import Data.IORef
-
-import Parsers
-import Rendering
-import Display
-import Bindings
-import Vis
-import Types
 
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Set as S
@@ -19,61 +12,78 @@ import Data.Void
 import Data.Text hiding (map, head)
 import Text.Megaparsec
 
+import Parsers
+import Visualisation
+import ViewParams
+import Graph
+import DataSet
+import Bindings
+import Display
+
 main :: IO ()
 main = do
     (_progName, _args) <- getArgsAndInitialize
-    vis <- parseInput _args
+    
+    -- Parse the DSL program
+    
+    vis <- parseInput _args -- returns demo vis if _args is empty
     if isLeft vis
         then do
             let errors = fromLeft defaultErrorBundle vis
-            print (errorBundlePretty errors)
+            putStrLn (errorBundlePretty errors)
         else do
             let inputVis = fromRight demoVis vis
-            let paths = getVisPaths inputVis
-            let ioFiles = map readFile paths
-            dataFiles <- sequence ioFiles
-            let dataFiles' = map pack dataFiles
-            let graphData = toGraphData (visType inputVis) dataFiles'
+            {- 
+                TODO redo the parsing of csv files 
+                OR parse them as they come in Parser.hs?
+            -}
+            let visualisation = formatVis inputVis
+            visRef <- newIORef visualisation
 
-            let visualisation = fitVisData $ replaceVisPaths inputVis graphData
-            vis <- newIORef visualisation
-            viewParams <- newIORef (ViewParams 1 (-10, 55) (0, 0, 0))
-
+            -- Initialise OpenGL and assign functions to StateVars
             initialDisplayMode $= [WithDepthBuffer, DoubleBuffered]
+            initialWindowSize $= Size 800 800
             _window <- createWindow "DataVis"
             reshapeCallback $= Just reshape
             depthFunc $= Just Less
-            keyboardMouseCallback $= Just (keyboardMouse viewParams)
-            idleCallback $= Just (idle viewParams)
-            displayCallback $= display vis viewParams
+
+            pos <- newIORef initPos
+            keyboardMouseCallback $= Just ( keyboardMouse (dimensions $ graph visualisation) visRef )
+            motionCallback $= Just ( mouseMotion visRef pos )
+            passiveMotionCallback $= Just ( passiveMouseMotion pos )
+            idleCallback $= Just idle
+            displayCallback $= display visRef
+
+            -- Enter the GLUT main loop
             mainLoop
 
--- parseInput :: [String] -> Either (ParseErrorBundle Text Void) Vis
+
+
+{- Helper Functions -}
+
+parseInput :: [String] -> IO ( Either (ParseErrorBundle Text Void) Visualisation )
 parseInput []   = return $ Right demoVis
 parseInput args = do
     input <- readFile $ head args
-    return $ runParser pVis "" $ pack input
+    return $ runParser pVisualisation "" $ pack input
 
+initPos :: Position
+initPos = Position (-1) (-1)
 
-toGraphData :: GraphType -> [Text] -> [GraphData]
-toGraphData TwoD dataFiles = graphData
-    where
-        parsedData = map (runParser pCSV2 "") dataFiles
-        res = rights parsedData
-        graphData = map XY $ map unzip res
+demoVis :: Visualisation
+demoVis = Vis "TEST" demoGraph initViewParams
 
-toGraphData ThreeD dataFiles = graphData
-    where
-        parsedData = map (runParser pCSV3 "") dataFiles
-        res = rights parsedData
-        graphData = map XYZ $ map unzip3 res
+demoGraph :: Graph -- Axis Labels, Axis Tick Parameters, Data
+demoGraph = Pie [
+    ( Raw "Rock" (Color4 0.6 0.3 0 1) [pieData]),
+    ( Raw "Paper" (Color4 0 0 1 1) [pieData]),
+    ( Raw "Scissors" (Color4 1 0 0 1) [pieData]),
+    ( Raw "Lizard" (Color4 0 1 0 1) [pieData]),
+    ( Raw "Spock" (Color4 0.5 0 0.5 1) [pieData])
+    ]
 
-
-demoVis :: Vis
-demoVis = Vis demoGraph ([Types.Grey, Types.Orange :: Colour])
-
-demoGraph :: Graph
-demoGraph = Graph TwoD renderSquares "Demo" ["Population", "Time"] [(File "/home/jim/college/fyp/data2.csv")]
+pieData :: GraphData
+pieData = toGraphData ([1]::[GLfloat])
 
 -- defaultErrorBundle :: ParseErrorBundle e s
 defaultErrorBundle = ParseErrorBundle ((TrivialError 0 Nothing S.empty)NE.:|[]) (PosState "" 0 (SourcePos "" (mkPos 0) (mkPos 0)) (mkPos 0) "")
